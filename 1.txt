@@ -1,1 +1,133 @@
-https://us05web.zoom.us/j/6059778315?pwd=cHdrSm5hbjNBanJkSEszVUxjcEN2dz09
+  private fnFetchData(): void {
+    let arrCallsToMake = [
+      null === this.providerLookupDetails ? 
+        this.searchService.getProviderProfileLookup().pipe(catchError((err) => {
+          this.bIsLoading = false;
+          this.addService.fnRaiseGenericAlert('getLookupDetails');
+          return of(null);
+        })) : 
+        of(null),
+      this.providerForm.providerId !== undefined ? 
+        this.searchService.getProfileInformation(this.providerForm.providerId).pipe(catchError((err) => {
+          this.bIsLoading = false;
+          this.addService.fnRaiseGenericAlert('getProfileInformation');
+          return of(null)
+        })) : 
+        of(null)
+    ];
+
+    this.bIsLoading = true;
+    forkJoin([...arrCallsToMake]).pipe(
+      map(([lookupInfo, providerInfo]) => {
+        if(!!lookupInfo) {
+          this.providerLookupDetails = {...lookupInfo[0]};
+        }
+        
+        if (!!providerInfo) {
+          this.providerForm = { ...providerInfo };
+          this.providerForm.providerId = this.nProviderId;
+          this.bIsLocationValidated = this.providerForm['addressValidated'];
+          this.savetoFlexcare = this.providerForm['savetoFlexcare'];
+         
+          if (!!this.providerForm.providerAlternateIDSection && this.providerForm.providerAlternateIDSection.length > 0) {
+            this.providerForm.providerAlternateIDSection[0].medicare = new Medicare();
+            if(this.providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy && this.providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy.length === 0){
+              this.providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy= [this.providerTaxonamy]
+            }else{
+              this.providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy.forEach((taxonamy, i) =>{
+                if (taxonamy.taxonomyCode.length) {
+                  this.disabledTaxonomies.push(taxonamy.taxonomyCode);
+                }
+              } )
+            }
+          }
+          this.defaultProviderForm = JSON.parse(JSON.stringify(this.providerForm));
+          this.fnSetAddress();
+        }
+        this.bIsLoading = false;
+      })
+    ).subscribe();
+  }
+
+
+
+ addTaxonomyRow() {
+    const taxonamyObj = new ProviderTaxonomy()
+    this.providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy.push(taxonamyObj);
+}
+
+ constructor(private router: Router, public addService: AddService, private searchService: SearchService , private oSearchformSvc: SearchFormService) {
+   
+    this.providerForm = new ProviderProfile();
+    this.providerNpi = new ProviderNpi();
+    this.medicare = new Medicare();
+
+    this.providerForm .providerAlternateIDSection = []
+    this.providerTaxonamy = 
+      {id:           0,
+      taxonomyCode: '',
+      isPrimary:    false,
+      active:       true,
+      isDelete:     false,}
+      this.providerNpi.providerTaxonomy = [this.providerTaxonamy]
+
+    this.providerForm.providerAlternateIDSection.push({providerNpi: [this.providerNpi], medicaidId: null, medicare: this.medicare});
+    
+   
+    
+  }
+
+
+ <button type="button" class="btn btn-primary btn-sm m-2" (click)="addTaxonomyRow()"
+                data-toggle="tooltip" title="Add Taxonomy">
+                <i class="fa-solid fa-plus"></i> Add More Taxonomy
+              </button> 
+                <div class="form-row form_field_outer_row p-1"
+                    *ngFor="let taxonomy of providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy; let i = index">
+                    <div class="form-group col-md-6 col-lg-4 col-xl-3">
+                        <label for="inputData">Taxonomy Code</label>.
+                        <select class="form-control form-control-custom" id="Taxonomy{{i}}" name="Taxonomy{{i}}" #Taxonomy="ngModel"
+                            [(ngModel)]="providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy[i].taxonomyCode"
+                            disabled="{{disabledTaxonomies.includes(providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy[i].taxonomyCode)}}">
+                            <option value=""></option>
+                            <ng-container *ngFor="let providerType of providerLookupDetails.taxonomyCodes">
+                                <option [ngValue]="providerType.taxonomyCode">{{providerType.taxonomyCode}}
+                                </option>
+                            </ng-container>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-6 col-lg-4 col-xl-3">
+                        <label for="inputData">Taxonomy Status</label>
+                        <select class="form-control form-control-custom" id="Status{{i}}" name="Status{{i}}"
+                            [(ngModel)]="providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy[i].active">
+                            <option value=""></option>
+                            <option [ngValue]="true">ACTIVE</option>
+                            <option [ngValue]="false">INACTIVE</option>
+                        </select>
+                    </div>
+
+                 
+
+                    <div class="form-group col-md-3 col-lg-2 col-xl-2 isPrimaryCheck" >
+                        <label class="f1 font-weight-bold">Primary</label>
+                
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="checkboxTrue"  name="isPrimary{{i}}" [(ngModel)] ="providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy[i].isPrimary" (change) ="onIsPrimaryChange($event,i)">
+                        </div>
+                    </div>
+
+
+
+                    <div class="add_del_btn_outer">
+                       
+                        
+                        <button class=" btn-primaryicon" (click)="removeTaxonomyRow(i)"
+                            data-toggle="tooltip" title="Delete"
+                           >
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
