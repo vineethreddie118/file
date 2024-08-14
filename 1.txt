@@ -1,1 +1,26 @@
-     *ngIf="taxonomy.taxonomyCode || taxonomy.isPrimary || i === providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy.length - 1">
+ addTaxonomyRow() {
+    const taxonamyObj = new ProviderTaxonomy();
+    this.providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy.push(taxonamyObj);
+}
+
+  constructor(private router: Router, public addService: AddService, private searchService: SearchService , private oSearchformSvc: SearchFormService) {
+   
+    this.providerForm = new ProviderProfile();
+    this.providerNpi = new ProviderNpi();
+    this.medicare = new Medicare();
+
+    this.providerForm .providerAlternateIDSection = []
+    this.providerTaxonamy = 
+      {id:           0,
+      taxonomyCode: '',
+      isPrimary:    false,
+      active:       true,
+      isDelete:     false,}
+      this.providerNpi.providerTaxonomy = [this.providerTaxonamy]
+
+    this.providerForm.providerAlternateIDSection.push({providerNpi: [this.providerNpi], medicaidId: null, medicare: this.medicare});
+    
+   
+    
+  }
+ 
