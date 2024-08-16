@@ -1,1 +1,69 @@
-https://us05web.zoom.us/j/6059778315?pwd=cHdrSm5hbjNBanJkSEszVUxjcEN2dz09
+    <div class="form-group col-8">
+                <label for="inputData">Mailing Address<span class="required-star"> *</span></label>
+                <div class="input-container">
+                    <input type="text" class="form-control form-control-custom" id="address1" name="address1" #address1="ngModel"
+                        [ngClass]="{'red-border':(address1.invalid && (address1.dirty || address1.touched || formsubmitted))}"
+                        placeholder="Type to get suggestions..."  maxlength="100"
+                        [ngClass]="{'red-border': ( address1.invalid && (address1.dirty || address1.touched || formsubmitted ))}"
+                        [(ngModel)]="oSelectedAddress" [ngbTypeahead]="fnGetSmartyStSuggestions"
+                        (selectItem)="fnHandleAddressChange($event)" (input)="fnHandleAddressChange($event)" [resultTemplate]="rt"
+                        [inputFormatter]="fnSmartyStAddressFormatter" (change)="onChange($event)" [editable]="false">
+
+                    <small *ngIf="bIsSearchingForAddress" class="form-text text-muted search-info">searching...</small>
+
+                    <div class="error-tooltip"
+                        *ngIf="address1.invalid && (address1.dirty || address1.touched || formsubmitted)">
+                        Required
+                    </div>
+                </div>
+            </div>
+
+
+ public fnHandleAddressChange(e: any): void {
+    if (e.item) {
+    this.providerForm.address1 = e.item.street_line;
+    this.providerForm.address2 = e.item.secondary;
+    this.providerForm.city = e.item.city;
+    this.providerForm.stateCode = e.item.state;
+    this.providerForm.zip = e.item.zipcode;
+  } else {
+    this.providerForm.address1 = e.target.value;
+  }
+    this.bIsLocationValidated = false;
+    this.oAddressChanged = {...this.oAddressChanged, val: true};
+  }
+
+  public fnGetSmartyStInfo(): SmartyStreetAddressInfo {
+    const oSmartyStInfo: SmartyStreetAddressInfo = new SmartyStreetAddressInfo();
+    oSmartyStInfo.street = this.providerForm.address1;
+    oSmartyStInfo.street2 = this.providerForm.address2;
+    oSmartyStInfo.city =  this.providerForm.city;
+    oSmartyStInfo.state =  this.providerForm.stateCode;
+    oSmartyStInfo.zipCode =  this.providerForm.zip;
+
+    return oSmartyStInfo;
+  }
+
+  public fnProfileHandleSmartyStAddressUpdatedEvent(oUpdatedAddressInfo: SmartyStreetUpdatedInfo) {
+    this.bIsMissingSecondaryInfo = oUpdatedAddressInfo.bIsMissingSecondaryInfo;
+    this.bIsLocationValidated = oUpdatedAddressInfo.bIsServiceAddressValidated;
+
+    if (!!oUpdatedAddressInfo.street)
+      this.providerForm.address1 = oUpdatedAddressInfo.street;
+
+    if (!!oUpdatedAddressInfo.city)
+      this.providerForm.city = oUpdatedAddressInfo.city;
+
+    if (!!oUpdatedAddressInfo.zip)
+      this.providerForm.zip = oUpdatedAddressInfo.zip;
+
+    if (!!oUpdatedAddressInfo.county)
+      this.providerForm.county = oUpdatedAddressInfo.county;
+  }
+
+  public fnHandleInvalidAddressUserChoice(choice: any): void {
+    if(1 === choice) {
+      this.bIsInvalidAddressAllowed = true;
+    }
+  }
+
