@@ -1,1 +1,17 @@
-https://us04web.zoom.us/j/7543092419?pwd=m3VdCeak4oz7bbSfwZy1dd1xWSLIog.1
+ <div class="form-group col-md-6 col-lg-4 col-xl-3">
+                    <label for="inputData">Mobile</label>
+                    <input type="tel" class="form-control form-control-custom" id="mobile" name="mobile" [(ngModel)]="providerForm.mobile" #mobile="ngModel"
+                    [ngClass]="{'red-border': mobile.invalid && (mobile.dirty || mobile.touched )}"
+                    pattern="^\d{10}$"  maxlength="10">
+
+               <div class="error-tooltip error-tooltip-offset"
+                   *ngIf="mobile.invalid && (mobile.dirty || mobile.touched )">
+                   <ng-container *ngIf="mobile.errors?.required">Required</ng-container>
+                   <ng-container *ngIf="mobile.errors?.pattern">Invalid</ng-container>
+
+               </div>
+                </div>
+                <div class="form-group col-md-6 col-lg-4 col-xl-3">
+                    <label for="inputData">Email</label>
+                    <input type="email" class="form-control form-control-custom" id="email" name="email" [(ngModel)]="providerForm.email">
+                </div>
