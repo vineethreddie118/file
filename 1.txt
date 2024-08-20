@@ -1,31 +1,9 @@
- // Check if addNpi() was called and NPI was added
-    if (!this.npiAdded || !providerLocation.providerLocationInfo[0].providerAlternateIDSection[0].providerNpi.length) {
-        providerLocation.providerLocationInfo[0].providerAlternateIDSection = null;
-    } else {
-        providerLocation.providerLocationInfo[0].providerAlternateIDSection[0].providerNpi.forEach((providerNpi) => {
-            providerNpi.providerTaxonomy = providerNpi.providerTaxonomy.filter(taxObj => taxObj.taxonomyCode);
-            providerNpi.providerSvcLocNpiId = 0;
-            if (providerNpi.providerTaxonomy.length > 0) {
-                providerNpi.providerTaxonomy = providerNpi.providerTaxonomy.map(taxonomy => ({
-                    id: this.getTaxonamtByCode(taxonomy),
-                    taxonomyCode: taxonomy?.taxonomyCode,
-                    isPrimary: taxonomy.isPrimary ? true : false,
-                    active: taxonomy?.active ? true : false,
-                    isDelete: false
-                }));
-            } else {
-                providerNpi.providerTaxonomy = [];
-            }
-            if (this.addService.eProviderType === ProviderTypeEnum.PRACTITIONER || !providerNpi.providerTaxonomy || providerNpi.providerTaxonomy.length === 0) {
-                providerLocation.providerLocationInfo[0].providerAlternateIDSection = null;
-            } else {
-                if (!providerNpi.providerTaxonomy) {
-                    providerLocation.providerLocationInfo[0].providerAlternateIDSection = null;
-                } else {
-                    delete providerLocation.providerLocationInfo[0].providerAlternateIDSection[0].medicaidId;
-                    delete providerLocation.providerLocationInfo[0].providerAlternateIDSection[0].medicare;
-                }
-            }
-        });
+if (
+        this.oCurrentProviderLocationInfo.providerAlternateIDSection &&
+        this.oCurrentProviderLocationInfo.providerAlternateIDSection[0] &&
+        this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi.length === 0
+    ) {
+        this.oCurrentProviderLocationInfo.providerAlternateIDSection = null;
     }
+
 
