@@ -1,63 +1,8 @@
-
-onEditBillinglocation(location, i) {
-    if(this.isBillingEditMode || this.isEditMode || this.isReplaceBillingMode || this.isReplaceMode ||this.serviceLocations && this.serviceLocations.length>0){
-      this.addService.fnRaiseWarningDlg("Invalid","Edit changes should be saved or discarded");
-      return;
+// Trim and set billing addresses
+    if (location.billingAddress1.length > 25) {
+        this.oCurrentProviderLocationInfo.billingAddress1Current = location.billingAddress1.substring(0, 24);
+        this.oCurrentProviderLocationInfo.billingAddress2 = location.billingAddress1.substring(24);
+    } else {
+        this.oCurrentProviderLocationInfo.billingAddress1Current = location.billingAddress1;
+        this.oCurrentProviderLocationInfo.billingAddress2 = location.billingAddress2;
     }
-
-
-    if(true === location.isGrpServiceLocation) {
-      this.addService.fnRaiseWarningDlg("Not allowed","This Tax ID belongs to an organization. You need to edit this address in the organization rather from here.");
-      return;
-    }
-
-    this.isReplaceBillingMode = false;
-    this.isBillingEditMode = true;
-    this.showAccordians = true;
-    this.isReplaceMode = false;
-   
-    this.showbillingaddressfields = true;
-    this.bIsBillingAddressValidated = location.billingAddressValidated;
-    this.oCurrentProviderLocationInfo.billingAddress1Current = location.billingAddress1Current;
-    this.oCurrentProviderLocationInfo.billingAddress1 = location.billingAddress1;
-    this.oCurrentProviderLocationInfo.billingAddress2 = location.billingAddress2;
-    this.oCurrentProviderLocationInfo.billingCity = location.billingCity;
-    this.oCurrentProviderLocationInfo.billingStateCode = location.billingStateCode;
-    this.oCurrentProviderLocationInfo.billingZip = location.billingZip;
-    this.oCurrentProviderLocationInfo.billingDefaultCity = location.billingDefaultCity;
-    this.oCurrentProviderLocationInfo.billingCounty = location.billingCounty;
-    this.oCurrentProviderLocationInfo.payeeName = location.payeeName;
-    this.oCurrentProviderLocationInfo.taxId = location.taxId;
-    this.oCurrentProviderLocationInfo.taxTypeId = location.taxTypeId;
-    this.oCurrentProviderLocationInfo.effectiveDate = location.effectiveDate,
-      this.oCurrentProviderLocationInfo.expirationDate = location.expirationDate,
-      this.oCurrentProviderLocationInfo.providerSvcLocPayeeMapID=location.providerSvcLocPayeeMapID;
-      this.oCurrentProviderLocationInfo.serviceLocationId=location.serviceLocationId;
-      this.selectedBillingAddreddIndex = i;
-
-      setTimeout(() => {
-        this.addService.scrollToTarget(this.addPlanElement1);
-      }, 20);
-  }
-
-public fnHandleBillingAddressChange(e: any): void {
-    if (e.item) {
-    this.oCurrentProviderLocationInfo.billingAddress1 = e.item.street_line.length >25 ?e.item.street_line.substring(0,24):e.item.street_line;
-    this.oCurrentProviderLocationInfo.billingAddress2 = e.item.street_line.length >25 ?e.item.street_line.substring(24,e.item.street_line.length): e.item.secondary;
-    this.oCurrentProviderLocationInfo.billingCity = e.item.city;
-    this.oCurrentProviderLocationInfo.billingStateCode = e.item.state;
-    this.oCurrentProviderLocationInfo.billingZip = e.item.zipcode;
-    this.oCurrentProviderLocationInfo.billingDefaultCity = e.item.city;
-   
-  } else {
-    // If the address is manually entered, use the entered address and clear other fields
-    this.oCurrentProviderLocationInfo.billingAddress1 = e.target.value;
-    
-    
-    
-}
-
-    this.bIsBillingAddressValidated = false;
-    this.oBillingAddressChanged = {...this.oBillingAddressChanged, val: true};
-    this.checkIfAddressesAreSame();
-  }
