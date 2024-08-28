@@ -1,7 +1,12 @@
-if (location.billingAddress1 && location.billingAddress1.length > 25) {
-        this.oCurrentProviderLocationInfo.billingAddress1 = location.billingAddress1.substring(0, 25);
-        this.oCurrentProviderLocationInfo.billingAddress2 = location.billingAddress1.substring(25) + (location.billingAddress2 || "");
-    } else {
-        this.oCurrentProviderLocationInfo.billingAddress1 = location.billingAddress1 || "";
-        this.oCurrentProviderLocationInfo.billingAddress2 = location.billingAddress2 || "";
-    }
+// Trimming logic
+    const billingAddress1Trimmed = location.billingAddress1.length > 25 
+                                    ? location.billingAddress1.substring(0, 25) 
+                                    : location.billingAddress1;
+    const billingAddress2Trimmed = location.billingAddress1.length > 25 
+                                    ? location.billingAddress1.substring(25) 
+                                    : location.billingAddress2;
+
+    this.bIsBillingAddressValidated = location.billingAddressValidated;
+    this.oCurrentProviderLocationInfo.billingAddress1Current = billingAddress1Trimmed;
+    this.oCurrentProviderLocationInfo.billingAddress1 = billingAddress1Trimmed;
+    this.oCurrentProviderLocationInfo.billingAddress2 = billingAddress2Trimmed;
