@@ -1,13 +1,7 @@
- // Trimming logic for billingAddress1
-    let billingAddress1Trimmed = location.billingAddress1;
-    let billingAddress2Trimmed = location.billingAddress2;
-
-    if (billingAddress1Trimmed.length > 25) {
-        billingAddress2Trimmed = billingAddress1Trimmed.substring(25) + billingAddress2Trimmed;
-        billingAddress1Trimmed = billingAddress1Trimmed.substring(0, 25);
-    }
-
-    this.bIsBillingAddressValidated = location.billingAddressValidated;
-    this.oCurrentProviderLocationInfo.billingAddress1Current = billingAddress1Trimmed;
-    this.oCurrentProviderLocationInfo.billingAddress1 = billingAddress1Trimmed;
-    this.oCurrentProviderLocationInfo.billingAddress2 = billingAddress2Trimmed;
+   // Trimming logic applied here
+    this.oCurrentProviderLocationInfo.billingAddress1 = location.billingAddress1.length > 25
+        ? location.billingAddress1.substring(0, 24)
+        : location.billingAddress1;
+    this.oCurrentProviderLocationInfo.billingAddress2 = location.billingAddress1.length > 25
+        ? location.billingAddress1.substring(24)
+        : location.billingAddress2;
