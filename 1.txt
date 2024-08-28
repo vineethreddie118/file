@@ -1,6 +1,10 @@
 
-    // Applying the same trimming logic as in fnHandleBillingAddressChange
+   
+    // Trimming billingAddress1 and appending to billingAddress1Current
     const billingAddress1 = location.billingAddress1 || '';
-    this.oCurrentProviderLocationInfo.billingAddress1Current = billingAddress1.substring(0, 25);
-    this.oCurrentProviderLocationInfo.billingAddress1 = billingAddress1.substring(0, 25);
-    this.oCurrentProviderLocationInfo.billingAddress2 = billingAddress1.length > 25 ? billingAddress1.substring(25) : location.billingAddress2;
+    const trimmedBillingAddress1 = billingAddress1.substring(0, 25);
+    const remainingBillingAddress = billingAddress1.length > 25 ? billingAddress1.substring(25) : '';
+
+    this.oCurrentProviderLocationInfo.billingAddress1Current = trimmedBillingAddress1;
+    this.oCurrentProviderLocationInfo.billingAddress1 = trimmedBillingAddress1;
+    this.oCurrentProviderLocationInfo.billingAddress2 = remainingBillingAddress || location.billingAddress2;
