@@ -1,7 +1,4 @@
-   // Trimming logic applied here
-    this.oCurrentProviderLocationInfo.billingAddress1 = location.billingAddress1.length > 25
-        ? location.billingAddress1.substring(0, 24)
-        : location.billingAddress1;
-    this.oCurrentProviderLocationInfo.billingAddress2 = location.billingAddress1.length > 25
-        ? location.billingAddress1.substring(24)
+    this.oCurrentProviderLocationInfo.billingAddress1 = location.billingAddress1.substring(0, 25);
+    this.oCurrentProviderLocationInfo.billingAddress2 = location.billingAddress1.length > 25 
+        ? location.billingAddress1.substring(25) 
         : location.billingAddress2;
