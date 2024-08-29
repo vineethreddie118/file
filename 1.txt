@@ -1,1 +1,8 @@
-https://us04web.zoom.us/j/7543092419?pwd=m3VdCeak4oz7bbSfwZy1dd1xWSLIog.1
+let serviceAddress =  this.oCurrentProviderLocationInfo.serviceAddress;
+    this.oCurrentProviderLocationInfo.serviceAddressCurrent = {
+      "street_line": serviceAddress.length > 25 ?serviceAddress.substring(0,24):serviceAddress,
+      "address2":  serviceAddress.length > 25 ?serviceAddress.substring(0,25):this.oCurrentProviderLocationInfo.address2,
+      "city": this.oCurrentProviderLocationInfo.city,
+      "stateCode": this.oCurrentProviderLocationInfo.stateCode,
+      "zip": this.oCurrentProviderLocationInfo.zip,
+    }
