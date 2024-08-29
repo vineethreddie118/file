@@ -1,1 +1,13 @@
-https://us04web.zoom.us/j/7543092419?pwd=m3VdCeak4oz7bbSfwZy1dd1xWSLIog.1
+   // Trimming logic for serviceAddress
+    this.oCurrentProviderLocationInfo.serviceAddress = this.oCurrentProviderLocationInfo.serviceAddress.substring(0, 25);
+    this.oCurrentProviderLocationInfo.address2 = this.oCurrentProviderLocationInfo.serviceAddress.length > 25 
+        ? this.oCurrentProviderLocationInfo.serviceAddress.substring(25)
+        : this.oCurrentProviderLocationInfo.address2;
+
+    this.oCurrentProviderLocationInfo.serviceAddressCurrent = {
+        "street_line": this.oCurrentProviderLocationInfo.serviceAddress,
+        "address2": this.oCurrentProviderLocationInfo.address2,
+        "city": this.oCurrentProviderLocationInfo.city,
+        "stateCode": this.oCurrentProviderLocationInfo.stateCode,
+        "zip": this.oCurrentProviderLocationInfo.zip,
+    }
