@@ -1,15 +1,4 @@
-const hasImproperNextDayHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some(hour => {
-      if (hour.openTimeValue === "" && hour.closeTimeValue === "") {
-        //if start and end date as 12:00AM skip it because they are default values
-        return false;
-      }
-      const openHour = parseInt(hour.openTimeValue.split(":")[0], 10); // Convert open time hour part to integer
-      const closeHour = parseInt(hour.closeTimeValue.split(":")[0], 10); // Convert close time hour part to integer
-  
-      return openHour > closeHour || (openHour === closeHour && hour.openTimeValue >= hour.closeTimeValue); // Checks if time spans over to next day improperly
-    });
-  
-    if (hasImproperNextDayHours) {
-      this.addService.fnRaiseWarningDlg("Invalid Hours", "End time has been exceeded for the day.");
-      return; // Stop the update process if invalid hours detected
-    }
+ <div class="form-group col-md-2">
+                      <input type="time" class="form-control form-control-custom" id="openTime{{i}}" name="openTime{{i}}"
+                        [(ngModel)]="oCurrentProviderLocationInfo.providerSvcLocHours[i].openTimeValue">
+                    </div>
