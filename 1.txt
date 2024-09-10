@@ -2,3 +2,5 @@
                       <input type="time" class="form-control form-control-custom" id="openTime{{i}}" name="openTime{{i}}"
                         [(ngModel)]="oCurrentProviderLocationInfo.providerSvcLocHours[i].openTimeValue">
                     </div>
+  <button type="button" (click)="oCurrentProviderLocationInfo.providerSvcLocHours[i].openTimeValue = null">Clear</button>
+
