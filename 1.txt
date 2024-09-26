@@ -1,5 +1,1 @@
-  // Apply address trimming logic
-          if (this.providerForm.address1.length > 25) {
-            this.providerForm.address2 = this.providerForm.address1.substring(25) + `${this.providerForm.address2 ? ', ' + this.providerForm.address2 : ''}`;
-            this.providerForm.address1 = this.providerForm.address1.substring(0, 25);
-          }
+https://us04web.zoom.us/j/7543092419?pwd=m3VdCeak4oz7bbSfwZy1dd1xWSLIog.1
