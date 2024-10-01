@@ -1,25 +1,11 @@
- <div class="form-group col-md-6 col-lg-4 col-xl-3">
-                    <label for="inputData">Phone </label>
-                    <input type="tel" class="form-control form-control-custom" id="phone" name="phone" #phone="ngModel"
-                        
-                    [(ngModel)]="oCurrentProviderLocationInfo.phone"
-                        [ngClass]="{'red-border': phone.invalid && (phone.dirty || phone.touched )}"
-                         pattern="^\d{10}$"  maxlength="10">
-
-                    <div class="error-tooltip error-tooltip-offset"
-                        *ngIf="phone.invalid && (phone.dirty || phone.touched )">
-                      <ng-container *ngIf="phone.errors?.pattern">Invalid</ng-container>
-
+<div class="form-group col-md-2">
+                      <input type="time" class="form-control form-control-custom" id="openTime{{i}}" name="openTime{{i}}"
+                        [(ngModel)]="oCurrentProviderLocationInfo.providerSvcLocHours[i].openTimeValue">
                     </div>
-                </div>
-                 
-                  <div class="form-group col-md-6 col-lg-4 col-xl-3">
-                    <label for="inputData">Phone Ext</label>
-                    <input type="tel" class="form-control form-control-custom" id="phoneExt" name="phoneExt" #phoneExt="ngModel" [(ngModel)]="oCurrentProviderLocationInfo.phoneExt" 
-                    [ngClass]="{'red-border': phoneExt.invalid && (phoneExt.dirty || phoneExt.touched )}" pattern="^\d{1,4}$" maxlength="4" appTrimText>
-                    <div class="error-tooltip error-tooltip-offset"
-                        *ngIf="phoneExt.invalid && (phoneExt.dirty || phoneExt.touched )">
-                        <ng-container *ngIf="phoneExt.errors?.pattern">Invalid</ng-container>
-
+                    <div class="form-group col-md-1">
+                      To
                     </div>
-                </div>
+                    <div class="form-group col-md-2">
+                      <input type="time" class="form-control form-control-custom" id="closeTime{{i}}" name="closeTime{{i}}"
+                        [(ngModel)]="oCurrentProviderLocationInfo.providerSvcLocHours[i].closeTimeValue">
+                    </div>
