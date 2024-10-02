@@ -1,4 +1,85 @@
- if (!this.oCurrentProviderLocationInfo.phone && this.oCurrentProviderLocationInfo.phoneExt) {
-        this.addService.fnRaiseWarningDlg("Missing Phone", "Please enter the phone number.");
-        return;
+{
+  "providerLocationInfo": [
+    {
+      "locationName": "test",
+      "phone": "4979479793",
+      "phoneExt": "2343",
+      "email": "JINZ@MPC.CARE",
+      "fax": "9789217530",
+      "isPrimary": false,
+      "locationAltId": null,
+      "addressId": 0,
+      "serviceAddress": "376-380 Railroad Ave",
+      "address2": "",
+      "city": "Hackensack",
+      "defaultCity": "Hackensack",
+      "stateCode": "NJ",
+      "zip": "07601-3501",
+      "country": "US",
+      "county": "Bergen",
+      "serviceLocationId": 0,
+      "providerSvcLocTypeId": 2,
+      "publicTransportationFlag": false,
+      "handicappedAccessibleFlag": false,
+      "providerServiceLocationMapId": 0,
+      "addressValidated": true,
+      "userId": 2,
+      "providerSvcLocHours": [],
+      "providerAlternateIDSection": null,
+      "providerLocBillingInfo": [],
+      "isDelete": false,
+      "replaceLocId": "",
+      "isGrpServiceLocation": true,
+      "grpPractitionersCount": 17,
+      "groupInfo": [
+        {
+          "providerId": 43619,
+          "serviceLocationId": 119806,
+          "providerServiceLocationMapId": 79409
+        }
+      ],
+      "locationAlternateXrefId": 0,
+      "serviceAddressCurrent": {
+        "street_line": "376-380 Railroad Ave",
+        "address2": "",
+        "city": "Hackensack",
+        "stateCode": "NJ",
+        "zip": "07601-3501"
+      },
+      "billingAddress1Current": "376-380 Railroad Ave"
+    },
+    {
+      "serviceLocationId": 0,
+      "isDelete": false,
+      "locationAltId": null,
+      "serviceAddress": "376-380 Railroad Ave",
+      "address2": "",
+      "defaultCity": "Hackensack",
+      "replaceLocId": "",
+      "publicTransportationFlag": false,
+      "handicappedAccessibleFlag": false,
+      "locationAlternateXrefId": 0,
+      "providerLocBillingInfo": [],
+      "isPrimary": false,
+      "providerAlternateIDSection": [
+        {
+          "providerNpi": [],
+          "medicaidId": null,
+          "medicare": {}
+        }
+      ],
+      "providerSvcLocHours": [],
+      "addressId": 0,
+      "providerServiceLocationMapId": 0,
+      "locationName": "test",
+      "city": "Hackensack",
+      "stateCode": "NJ",
+      "zip": "07601-3501",
+      "county": "Bergen",
+      "addressValidated": true,
+      "phone": "4979479793",
+      "phoneExt": "2343"
     }
+  ],
+  "providerId": 55810
+}
