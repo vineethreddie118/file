@@ -1,30 +1,29 @@
-Hi team , good morning welcome to sprinter retro spection 24.13
+<div class="form-group col-md-6 col-lg-4 col-xl-3">
+                    <label for="inputData">Phone </label>
+                    <input type="tel" class="form-control form-control-custom" id="phone" name="phone" #phone="ngModel"
+                        
+                    [(ngModel)]="oCurrentProviderLocationInfo.phone"
+                        [ngClass]="{'red-border': phone.invalid && (phone.dirty || phone.touched )}"
+                         pattern="^\d{10}$"  maxlength="10">
 
-Coming to the agenda we will discuss about the sprint goals,…..
+                    <div class="error-tooltip error-tooltip-offset"
+                        *ngIf="phone.invalid && (phone.dirty || phone.touched )">
+                      <ng-container *ngIf="phone.errors?.pattern">Invalid</ng-container>
 
-next slide—we started the sprint with 
+                    </div>
+                </div>
+                  <!-- <div class="form-group col-md-6 col-lg-4 col-xl-3">
+                    <label for="inputData">Phone</label>
+                    <input type="text" class="form-control form-control-custom" id="phone" name="phone"
+                      [(ngModel)]="oCurrentProviderLocationInfo.phone">
+                  </div> -->
+                  <div class="form-group col-md-6 col-lg-4 col-xl-3">
+                    <label for="inputData">Phone Ext</label>
+                    <input type="tel" class="form-control form-control-custom" id="phoneExt" name="phoneExt" #phoneExt="ngModel" [(ngModel)]="oCurrentProviderLocationInfo.phoneExt" 
+                    [ngClass]="{'red-border': phoneExt.invalid && (phoneExt.dirty || phoneExt.touched )}" pattern="^\d{1,4}$" maxlength="4" appTrimText>
+                    <div class="error-tooltip error-tooltip-offset"
+                        *ngIf="phoneExt.invalid && (phoneExt.dirty || phoneExt.touched )">
+                        <ng-container *ngIf="phoneExt.errors?.pattern">Invalid</ng-container>
 
-1233- Previously we are pushing NPI updates flexare , but taxonomy updates we are only pushing to connects , in this ticket we fixed the issue where taxonomy updates are pushed to flexcare
-
-1204 – There is an issue with data discrepancy in this ticket now that has been resolved it moved to stage
-
-1415 – It is a bug where emblem network plan is not showing up on the UI now this has been fixed showing the plan in the UI this also has been moved to testing
-
-1421 - Previously for an existing practitioner if there is a flex_providerId in common services we are removing that while updating the practitioner profile screen, Now we have handled this scenario not to remove the flex_provider id in nwc on update of profile screen
-
-1381 - if  ProviderSvcLocTypeID is equal to 79 meaning that is a (Description-DUMMY GROUP) we are not stopping that group taxId to terminate or replace a location if it is linked to any practitioner
-
-1372 - While linking the Practitioner to Site, it did Not Push Practice Discipline to NWC. We have fixed this issue and deployed it to the stage.
-
-1418 -while terming the billin location and if the billing location is the only payee for the location. We term the location in UPD. Howvere, this termination was not sent to the flexacare. This was resolved and moved to stage 
-
-
-
-1454 - while creatng a location in Group, we were checking the discipline code in NWC. Since the group wont be any License code the system was generating "Intrenal Server Error" for the user. We have fixed this and moved the code to UAT
-1441 - if there is a flexcare provider id present in upd and while updating profile screen if it fails in flexcare we are removing the PDclinician id from NWC, now we are passing the flexcareid to save as PDclinicianid in nwc even if it fails while updating the practitioner profile screen
-
-1057 - While the user was linking the practioner for many locations in a group, the user received "duplication error". This was fixed and is with QA for testing
-
-
-
-
+                    </div>
+                </div>
