@@ -1,29 +1,28 @@
-<div class="form-group col-md-6 col-lg-4 col-xl-3">
-                    <label for="inputData">Phone </label>
-                    <input type="tel" class="form-control form-control-custom" id="phone" name="phone" #phone="ngModel"
-                        
-                    [(ngModel)]="oCurrentProviderLocationInfo.phone"
-                        [ngClass]="{'red-border': phone.invalid && (phone.dirty || phone.touched )}"
-                         pattern="^\d{10}$"  maxlength="10">
-
-                    <div class="error-tooltip error-tooltip-offset"
-                        *ngIf="phone.invalid && (phone.dirty || phone.touched )">
-                      <ng-container *ngIf="phone.errors?.pattern">Invalid</ng-container>
-
-                    </div>
-                </div>
-                  <!-- <div class="form-group col-md-6 col-lg-4 col-xl-3">
-                    <label for="inputData">Phone</label>
-                    <input type="text" class="form-control form-control-custom" id="phone" name="phone"
-                      [(ngModel)]="oCurrentProviderLocationInfo.phone">
-                  </div> -->
-                  <div class="form-group col-md-6 col-lg-4 col-xl-3">
-                    <label for="inputData">Phone Ext</label>
-                    <input type="tel" class="form-control form-control-custom" id="phoneExt" name="phoneExt" #phoneExt="ngModel" [(ngModel)]="oCurrentProviderLocationInfo.phoneExt" 
-                    [ngClass]="{'red-border': phoneExt.invalid && (phoneExt.dirty || phoneExt.touched )}" pattern="^\d{1,4}$" maxlength="4" appTrimText>
-                    <div class="error-tooltip error-tooltip-offset"
-                        *ngIf="phoneExt.invalid && (phoneExt.dirty || phoneExt.touched )">
-                        <ng-container *ngIf="phoneExt.errors?.pattern">Invalid</ng-container>
-
-                    </div>
-                </div>
+ fnAddLocationDetails() {
+   
+    
+    if ( !this.bIsServiceAddressValidated && !this.bIsInvalidAddressAllowed){
+      this.addService.fnRaiseWarningDlg("Invalid" ," Please enter valid address");
+      return;
+    }
+    let timeValueInvalid = false;
+    const hasImproperNextDayHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some(hour => {
+      if ((hour.openTimeValue   && hour.closeTimeValue === "") || (hour.openTimeValue === '' && hour.closeTimeValue) ) {
+        //if start and end date as null skip it because they are default values
+        timeValueInvalid = true;
+      }
+   
+      const openHour = parseInt(hour.openTimeValue.split(":")[0], 10); // Convert open time hour part to integer
+      const closeHour = parseInt(hour.closeTimeValue.split(":")[0], 10); // Convert close time hour part to integer
+  
+      return openHour > closeHour || (openHour === closeHour && hour.openTimeValue >= hour.closeTimeValue); // Checks if time spans over to next day improperly
+    });
+    if(timeValueInvalid){
+      this.addService.fnRaiseWarningDlg("Incomplete Hours" ," Please Fill both open and close time");
+      return;
+    }
+  
+    if (hasImproperNextDayHours) {
+      this.addService.fnRaiseWarningDlg("Invalid Hours", "End time has been exceed for the day.");
+      return; // Stop it if invalid hours are shown
+    }
