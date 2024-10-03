@@ -1,1 +1,136 @@
-https://us04web.zoom.us/j/7543092419?pwd=m3VdCeak4oz7bbSfwZy1dd1xWSLIog.1
+{
+    "providerLocationInfo": [
+        {
+            "locationName": "jkdkfjl",
+            "phone": "7574275987",
+            "phoneExt": null,
+            "email": null,
+            "fax": "7575630887",
+            "isPrimary": false,
+            "locationAltId": null,
+            "addressId": 0,
+            "serviceAddress": "97-8 Calle 94",
+            "address2": "",
+            "city": "Carolina",
+            "defaultCity": "Carolina",
+            "stateCode": "PR",
+            "zip": "00985-4151",
+            "country": "US",
+            "county": "Carolina",
+            "serviceLocationId": 0,
+            "providerSvcLocTypeId": 2,
+            "publicTransportationFlag": false,
+            "handicappedAccessibleFlag": false,
+            "providerServiceLocationMapId": 0,
+            "addressValidated": true,
+            "userId": 2,
+            "providerSvcLocHours": [],
+            "providerAlternateIDSection": null,
+            "providerLocBillingInfo": [],
+            "isDelete": false,
+            "replaceLocId": "",
+            "isGrpServiceLocation": false,
+            "grpPractitionersCount": 1,
+            "groupInfo": [
+                {
+                    "providerId": 67693,
+                    "serviceLocationId": 35729,
+                    "providerServiceLocationMapId": 126239
+                }
+            ],
+            "locationAlternateXrefId": 0,
+            "serviceAddressCurrent": {
+                "street_line": "97-8 Calle 94",
+                "address2": "",
+                "city": "Carolina",
+                "stateCode": "PR",
+                "zip": "00985-4151"
+            },
+            "billingAddress1Current": "97-8 Calle 94"
+        },
+        {
+            "serviceLocationId": 0,
+            "isDelete": false,
+            "locationAltId": null,
+            "serviceAddress": "97-8 Calle 94",
+            "address2": "",
+            "defaultCity": "Carolina",
+            "replaceLocId": "",
+            "publicTransportationFlag": false,
+            "handicappedAccessibleFlag": false,
+            "locationAlternateXrefId": 0,
+            "providerLocBillingInfo": [],
+            "isPrimary": false,
+            "providerAlternateIDSection": [
+                {
+                    "providerNpi": [],
+                    "medicaidId": null,
+                    "medicare": {}
+                }
+            ],
+            "providerSvcLocHours": [],
+            "addressId": 0,
+            "providerServiceLocationMapId": 0,
+            "locationName": "jkdkfjl",
+            "city": "Carolina",
+            "stateCode": "PR",
+            "zip": "00985-4151",
+            "county": "Carolina",
+            "addressValidated": true
+        }
+    ],
+    "providerId": 67693
+}
+
+
+
+{
+    "providerLocationInfo": [
+        {
+            "serviceLocationId": 0,
+            "isDelete": false,
+            "locationAltId": null,
+            "serviceAddress": "9 1/2 16th St S",
+            "address2": "",
+            "defaultCity": "Great Falls",
+            "replaceLocId": "",
+            "publicTransportationFlag": false,
+            "handicappedAccessibleFlag": false,
+            "locationAlternateXrefId": 0,
+            "providerLocBillingInfo": [
+                {
+                    "billingAddress1": "9 1/2 15th St",
+                    "billingAddress2": "",
+                    "billingCity": "Cloquet",
+                    "billingStateCode": "MN",
+                    "billingZip": "55720-1907",
+                    "billingDefaultCity": "Cloquet",
+                    "billingCounty": "Carlton",
+                    "payeeName": "ghfgh",
+                    "taxId": "786786576",
+                    "taxTypeId": "S",
+                    "billingAddressValidated": true,
+                    "w9flag": true,
+                    "effectiveDate": "2024-10-17",
+                    "expirationDate": null,
+                    "providerSvcLocPayeeId": 0,
+                    "providerSvcLocPayeeMapID": 0,
+                    "isReplace": false,
+                    "isDelete": false
+                }
+            ],
+            "isPrimary": false,
+            "providerAlternateIDSection": null,
+            "providerSvcLocHours": [],
+            "addressId": 0,
+            "providerServiceLocationMapId": 0,
+            "locationName": "tets99",
+            "city": "Great Falls",
+            "stateCode": "MT",
+            "zip": "59401-3817",
+            "county": "Cascade",
+            "addressValidated": true
+        }
+    ],
+    "providerId": 67693
+}
