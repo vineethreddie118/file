@@ -1,19 +1,12 @@
-private convertTo24HourFormat(time12h: string): string {
-  // Check if time12h is defined and contains 'AM' or 'PM'
-  if (!time12h || !time12h.includes(' ')) {
-    console.error("Invalid time format: ", time12h);
-    return ''; // Return an empty string or handle it as needed
-  }
+private convertTo24HourFormat(time: string): number {
+  const [timePart, period] = time.split(" ");
+  let [hours, minutes] = timePart.split(":").map(Number);
 
-  const [time, period] = time12h.split(' ');
-  let [hours, minutes] = time.split(':').map(Number);
-
-  if (period === 'PM' && hours < 12) {
+  if (period === "PM" && hours !== 12) {
     hours += 12;
-  } else if (period === 'AM' && hours === 12) {
+  } else if (period === "AM" && hours === 12) {
     hours = 0;
   }
 
-  // Pad hours and minutes with leading zeros if necessary
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  return hours * 60 + minutes; // Return time in minutes for easier comparison
 }
