@@ -1,83 +1,51 @@
-generateTimeOptions() {
-    const times = [];
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-  
-    for (let i = 0; i < 48; i++) { // 48 intervals of 30 minutes in a day
-      const hours = start.getHours() % 12 || 12; // Convert to 12-hour format
-      const minutes = start.getMinutes().toString().padStart(2, '0');
-      const period = start.getHours() < 12 ? 'AM' : 'PM';
-      times.push(`${hours}:${minutes} ${period}`);
-      start.setMinutes(start.getMinutes() + 30); // Increment by 30 minutes
+ const allDays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];  // Define all possible days
+
+  this.oCurrentProviderLocationInfo.providerSvcLocHours = this.oCurrentProviderLocationInfo.providerSvcLocHours || []; // Initialize providerSvcLocHours if it's not an array
+
+  const existingDays = this.oCurrentProviderLocationInfo.providerSvcLocHours.map(hour => hour.dayOfWeek); // Find out which days are missing
+  const missingDays = allDays.filter(day => !existingDays.includes(day));
+
+  // Add default hours for missing days
+  missingDays.forEach(missingDay => {
+    this.oCurrentProviderLocationInfo.providerSvcLocHours.push(this.getDefaultHour(missingDay));
+  });
+
+  // Sort providerSvcLocHours by day of the week
+  this.oCurrentProviderLocationInfo.providerSvcLocHours.sort((a, b) => {
+    return allDays.indexOf(a.dayOfWeek) - allDays.indexOf(b.dayOfWeek);
+  });
+
+  // Convert existing times from 24-hour format to 12-hour format for the dropdown display
+  this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(hour => {
+    if (hour.openTimeValue) {
+      hour.openTimeValue = this.convertTo12HourFormat(hour.openTimeValue);
     }
-  
-    this.timeOptions = times;
-  }
-
-public fnEditLocation(nIndex: number): void {
-    if(this.isBillingEditMode || this.isEditMode || this.isReplaceMode || this.isReplaceBillingMode||this.serviceLocations && this.serviceLocations.length>0){
-      this.addService.fnRaiseWarningDlg("Invalid","Edit changes should be saved or discarded");
-      return;
+    if (hour.closeTimeValue) {
+      hour.closeTimeValue = this.convertTo12HourFormat(hour.closeTimeValue);
     }
-  
-    this.oCurrentProviderLocationInfo = JSON.parse(JSON.stringify({ ...this.oProviderLocation.providerLocationInfo[nIndex] }));
+  });
 
-    // this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].effectiveDate = new Date(this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].effectiveDate)
+  // Hide the add symbol for all entries initially
+  this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => svcHour.showAddSymbol = false);
 
-    this.isReplaceBillingMode = false;
+  // Track the first entry of each day
+  let seenDays = {};
 
-    this.isPracticeLocationAccordionOpen = true;
-
-    const allDays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];  // Define all possible days
-
-    this.oCurrentProviderLocationInfo.providerSvcLocHours = this.oCurrentProviderLocationInfo.providerSvcLocHours || []; // Initialize providerSvcLocHours if it's not an array
-  
-    const existingDays = this.oCurrentProviderLocationInfo.providerSvcLocHours.map(hour => hour.dayOfWeek); // Find out which days are missing
-    const missingDays = allDays.filter(day => !existingDays.includes(day));
-  
-    // Add default hours for missing days
-    missingDays.forEach(missingDay => {
-      this.oCurrentProviderLocationInfo.providerSvcLocHours.push(this.getDefaultHour(missingDay));
-    });
-  
-    // Sort providerSvcLocHours by day of the week
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.sort((a, b) => {
-      return allDays.indexOf(a.dayOfWeek) - allDays.indexOf(b.dayOfWeek);
-    });
-  
-    // Convert existing times to 24-hour format if needed
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(hour => {
-      // Convert openTimeValue and closeTimeValue from 12-hour to 24-hour format if necessary
-      if (hour.openTimeValue && hour.openTimeValue.includes(' ')) {
-        hour.openTimeValue = this.convertTo24HourFormat(hour.openTimeValue);
-      }
-      if (hour.closeTimeValue && hour.closeTimeValue.includes(' ')) {
-        hour.closeTimeValue = this.convertTo24HourFormat(hour.closeTimeValue);
-      }
-    });
-  
-    // Hide the add symbol for all entries initially
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => svcHour.showAddSymbol = false);
-  
-    // Track the first entry of each day
-    let seenDays = {};
-  
-    // Set `showAddSymbol` to true only for the first entry of each day
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => {
-      if (!seenDays[svcHour.dayOfWeek]) {
-        svcHour.showAddSymbol = true;     // Show the add symbol
-        seenDays[svcHour.dayOfWeek] = true;
-      }
-    });
+  // Set `showAddSymbol` to true only for the first entry of each day
+  this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => {
+    if (!seenDays[svcHour.dayOfWeek]) {
+      svcHour.showAddSymbol = true; // Show the add symbol
+      seenDays[svcHour.dayOfWeek] = true;
+    }
+  });
 
 
- {
-                    "providerSvcLocHoursId": 646840,
-                    "providerServiceLocationMapId": 190699,
-                    "dayOfWeek": "WED",
-                    "openTimeValue": "09:00",
-                    "closeTimeValue": "18:00",
-                    "openTime": 900,
-                    "closeTime": 1800,
-                    "userId": null
-                }
+private convertTo12HourFormat(time24h: string): string {
+  if (!time24h) return '';
+
+  const [hours, minutes] = time24h.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const adjustedHours = hours % 12 || 12; // Convert 0 or 12 to 12 for 12-hour clock
+
+  return `${adjustedHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
