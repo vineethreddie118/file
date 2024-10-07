@@ -1,12 +1,68 @@
 <div class="form-group col-md-2">
-                      <input type="time" class="form-control form-control-custom" id="openTime{{i}}" name="openTime{{i}}"
-                        [(ngModel)]="oCurrentProviderLocationInfo.providerSvcLocHours[i].openTimeValue" min="01:00" max="23:30" step="1800">
-                    </div>
-                    
-                    <div class="form-group col-md-1">
-                      To
-                    </div>
-                    <div class="form-group col-md-2">
-                      <input type="time" class="form-control form-control-custom" id="closeTime{{i}}" name="closeTime{{i}}"
-                        [(ngModel)]="oCurrentProviderLocationInfo.providerSvcLocHours[i].closeTimeValue" min="01:00" max="23:30" step="1800">
-                    </div>
+  <select class="form-control form-control-custom" id="openTime{{i}}" name="openTime{{i}}"
+    [(ngModel)]="oCurrentProviderLocationInfo.providerSvcLocHours[i].openTimeValue">
+    <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+  </select>
+</div>
+
+<div class="form-group col-md-1">
+  To
+</div>
+
+<div class="form-group col-md-2">
+  <select class="form-control form-control-custom" id="closeTime{{i}}" name="closeTime{{i}}"
+    [(ngModel)]="oCurrentProviderLocationInfo.providerSvcLocHours[i].closeTimeValue">
+    <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+  </select>
+</div>
+
+
+
+To show a time dropdown with 30-minute increments using the input of type "time", the browser's default behavior may not fully support your requirement (displaying time intervals like 1:00 AM, 1:30 AM). The step attribute helps control the intervals when the time picker is displayed, but the exact formatting and dropdown display (like AM/PM) depend on browser support, which might not match what you expect.
+
+To achieve the desired 30-minute interval dropdown without relying on browser behavior, you can manually create the dropdown using a select element instead of input type="time". Here's how you can implement it:
+
+html
+Copy code
+<div class="form-group col-md-2">
+  <select class="form-control form-control-custom" id="openTime{{i}}" name="openTime{{i}}"
+    [(ngModel)]="oCurrentProviderLocationInfo.providerSvcLocHours[i].openTimeValue">
+    <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+  </select>
+</div>
+
+<div class="form-group col-md-1">
+  To
+</div>
+
+<div class="form-group col-md-2">
+  <select class="form-control form-control-custom" id="closeTime{{i}}" name="closeTime{{i}}"
+    [(ngModel)]="oCurrentProviderLocationInfo.providerSvcLocHours[i].closeTimeValue">
+    <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+  </select>
+</div>
+In your TypeScript file, generate the timeOptions array with 30-minute intervals:
+
+typescript
+Copy code
+timeOptions: string[] = [];
+
+ngOnInit() {
+  this.generateTimeOptions();
+}
+
+generateTimeOptions() {
+  const times = [];
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < 48; i++) { // 48 intervals of 30 minutes in a day
+    const hours = start.getHours() % 12 || 12; // Convert to 12-hour format
+    const minutes = start.getMinutes().toString().padStart(2, '0');
+    const period = start.getHours() < 12 ? 'AM' : 'PM';
+    times.push(`${hours}:${minutes} ${period}`);
+    start.setMinutes(start.getMinutes() + 30); // Increment by 30 minutes
+  }
+
+  this.timeOptions = times;
+}
