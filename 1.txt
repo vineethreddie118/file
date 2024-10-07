@@ -1,43 +1,54 @@
- public fnEditLocation(nIndex: number): void {
-    if(this.isBillingEditMode || this.isEditMode || this.isReplaceMode || this.isReplaceBillingMode||this.serviceLocations && this.serviceLocations.length>0){
-      this.addService.fnRaiseWarningDlg("Invalid","Edit changes should be saved or discarded");
-      return;
-    }
-  
-    this.oCurrentProviderLocationInfo = JSON.parse(JSON.stringify({ ...this.oProviderLocation.providerLocationInfo[nIndex] }));
+public fnEditLocation(nIndex: number): void {
+  if (this.isBillingEditMode || this.isEditMode || this.isReplaceMode || this.isReplaceBillingMode || this.serviceLocations && this.serviceLocations.length > 0) {
+    this.addService.fnRaiseWarningDlg("Invalid", "Edit changes should be saved or discarded");
+    return;
+  }
 
-    // this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].effectiveDate = new Date(this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].effectiveDate)
+  this.oCurrentProviderLocationInfo = JSON.parse(JSON.stringify({ ...this.oProviderLocation.providerLocationInfo[nIndex] }));
 
-    this.isReplaceBillingMode = false;
+  this.isReplaceBillingMode = false;
+  this.isPracticeLocationAccordionOpen = true;
 
-    this.isPracticeLocationAccordionOpen = true;
+  const allDays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+  this.oCurrentProviderLocationInfo.providerSvcLocHours = this.oCurrentProviderLocationInfo.providerSvcLocHours || [];
 
-    const allDays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];  // Define all possible days
+  const existingDays = this.oCurrentProviderLocationInfo.providerSvcLocHours.map(hour => hour.dayOfWeek);
+  const missingDays = allDays.filter(day => !existingDays.includes(day));
 
-    this.oCurrentProviderLocationInfo.providerSvcLocHours = this.oCurrentProviderLocationInfo.providerSvcLocHours || []; // Initialize providerSvcLocHours if it's not an array
+  missingDays.forEach(missingDay => {
+    this.oCurrentProviderLocationInfo.providerSvcLocHours.push(this.getDefaultHour(missingDay));
+  });
 
-    const existingDays = this.oCurrentProviderLocationInfo.providerSvcLocHours.map(hour => hour.dayOfWeek); // Find out which days are missing
-    const missingDays = allDays.filter(day => !existingDays.includes(day));
+  this.oCurrentProviderLocationInfo.providerSvcLocHours.sort((a, b) => {
+    return allDays.indexOf(a.dayOfWeek) - allDays.indexOf(b.dayOfWeek);
+  });
 
-    missingDays.forEach(missingDay => {
-      this.oCurrentProviderLocationInfo.providerSvcLocHours.push(this.getDefaultHour(missingDay)); // Add default hours for missing days
-    });
+  // Convert saved times to match the `timeOptions` format
+  this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => {
+    svcHour.openTimeValue = this.convertToAMPMFormat(svcHour.openTimeValue);
+    svcHour.closeTimeValue = this.convertToAMPMFormat(svcHour.closeTimeValue);
+    svcHour.showAddSymbol = false;
+  });
 
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.sort((a, b) => {     // when all locationhours  added, sort the providerSvcLocHours by day of the week
-      return allDays.indexOf(a.dayOfWeek) - allDays.indexOf(b.dayOfWeek);
-    });
-   
-    
-    //////
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => svcHour.showAddSymbol = false);
-
-  // Track the first  of each day
+  // Track the first occurrence of each day
   let seenDays = {};
 
-  // Set `showAddSymbol` to true only for the first  of each day
+  // Set `showAddSymbol` to true only for the first occurrence of each day
   this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => {
-    if (!seenDays[svcHour.dayOfWeek]) { 
-      svcHour.showAddSymbol = true;     // Show the add symbol
-      seenDays[svcHour.dayOfWeek] = true; 
+    if (!seenDays[svcHour.dayOfWeek]) {
+      svcHour.showAddSymbol = true;
+      seenDays[svcHour.dayOfWeek] = true;
     }
   });
+}
+
+// Helper method to convert saved time values to AM/PM format
+private convertToAMPMFormat(time: string): string {
+  if (!time) return '';
+
+  const [hours, minutes] = time.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const formattedHours = hours % 12 || 12; // Convert to 12-hour format
+
+  return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
