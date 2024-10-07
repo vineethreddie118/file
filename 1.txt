@@ -1,42 +1,43 @@
-  let timeValueInvalid = false;
-    const hasImproperNextDayHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some(hour => {
-      if ((hour.openTimeValue   && hour.closeTimeValue === "") || (hour.openTimeValue === '' && hour.closeTimeValue) ) {
-        //if start and end date as null skip it because they are default values
-        timeValueInvalid = true;
-      }
-   
-      const openHour = parseInt(hour.openTimeValue.split(":")[0], 10); // Convert open time hour part to integer
-      const closeHour = parseInt(hour.closeTimeValue.split(":")[0], 10); // Convert close time hour part to integer
-  
-      return openHour > closeHour || (openHour === closeHour && hour.openTimeValue >= hour.closeTimeValue); // Checks if time spans over to next day improperly
-    });
-    if(timeValueInvalid){
-      this.addService.fnRaiseWarningDlg("Incomplete Hours" ," Please Fill both open and close time");
+ public fnEditLocation(nIndex: number): void {
+    if(this.isBillingEditMode || this.isEditMode || this.isReplaceMode || this.isReplaceBillingMode||this.serviceLocations && this.serviceLocations.length>0){
+      this.addService.fnRaiseWarningDlg("Invalid","Edit changes should be saved or discarded");
       return;
     }
   
-    if (hasImproperNextDayHours) {
-      this.addService.fnRaiseWarningDlg("Invalid Hours", "End time has been exceed for the day.");
-      return; // Stop it if invalid hours are shown
-    }
-    const hasOverlappingHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some((currentHour, index, array) => {
-      const currentOpen = currentHour.openTimeValue;
-      const currentClose = currentHour.closeTimeValue;
-      return array.some((checkHour, checkIndex) => {
-          if (index === checkIndex) return false; // Don't compare with itself
-          if (currentHour.dayOfWeek !== checkHour.dayOfWeek) return false; // Only compare same days
+    this.oCurrentProviderLocationInfo = JSON.parse(JSON.stringify({ ...this.oProviderLocation.providerLocationInfo[nIndex] }));
 
-          const checkOpen = checkHour.openTimeValue;
-          const checkClose = checkHour.closeTimeValue;
-          // Check for overlap
-          return (currentOpen < checkClose && currentClose > checkOpen); // Overlap condition
-      });
-  });
+    // this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].effectiveDate = new Date(this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].effectiveDate)
 
-  if (hasOverlappingHours) {
-      
-      this.addService.fnRaiseWarningDlg("Overlap Detected", "Office hours cannot overlap for the same day.");
+    this.isReplaceBillingMode = false;
+
+    this.isPracticeLocationAccordionOpen = true;
+
+    const allDays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];  // Define all possible days
+
+    this.oCurrentProviderLocationInfo.providerSvcLocHours = this.oCurrentProviderLocationInfo.providerSvcLocHours || []; // Initialize providerSvcLocHours if it's not an array
+
+    const existingDays = this.oCurrentProviderLocationInfo.providerSvcLocHours.map(hour => hour.dayOfWeek); // Find out which days are missing
+    const missingDays = allDays.filter(day => !existingDays.includes(day));
+
+    missingDays.forEach(missingDay => {
+      this.oCurrentProviderLocationInfo.providerSvcLocHours.push(this.getDefaultHour(missingDay)); // Add default hours for missing days
+    });
+
+    this.oCurrentProviderLocationInfo.providerSvcLocHours.sort((a, b) => {     // when all locationhours  added, sort the providerSvcLocHours by day of the week
+      return allDays.indexOf(a.dayOfWeek) - allDays.indexOf(b.dayOfWeek);
+    });
+   
     
-      
-      return; // Stop it  if overlap detected
-  }
+    //////
+    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => svcHour.showAddSymbol = false);
+
+  // Track the first  of each day
+  let seenDays = {};
+
+  // Set `showAddSymbol` to true only for the first  of each day
+  this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => {
+    if (!seenDays[svcHour.dayOfWeek]) { 
+      svcHour.showAddSymbol = true;     // Show the add symbol
+      seenDays[svcHour.dayOfWeek] = true; 
+    }
+  });
