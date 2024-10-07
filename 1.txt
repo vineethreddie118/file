@@ -1,15 +1,7 @@
-generateTimeOptions() {
-  const times = [];
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-
-  for (let i = 0; i < 48; i++) { // 48 intervals of 30 minutes in a day
-    const hours = start.getHours() % 12 || 12; // Convert to 12-hour format
-    const minutes = start.getMinutes().toString().padStart(2, '0');
-    const period = start.getHours() < 12 ? 'AM' : 'PM';
-    times.push(`${hours}:${minutes} ${period}`);
-    start.setMinutes(start.getMinutes() + 30); // Increment by 30 minutes
-  }
-
-  this.timeOptions = times;
-}
+ "providerSvcLocHoursId": 0,
+                    "providerServiceLocationMapId": 0,
+                    "userId": null,
+                    "dayOfWeek": "MON",
+                    "openTimeValue": "1:30 AM",
+                    "closeTimeValue": "9:30 PM"
+                }
