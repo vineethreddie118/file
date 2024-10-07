@@ -1,53 +1,112 @@
-fnAddLocationDetails() {
-    
-    
-    if ( !this.bIsServiceAddressValidated && !this.bIsInvalidAddressAllowed){
-      this.addService.fnRaiseWarningDlg("Invalid" ," Please enter valid address");
-      return;
-    }
-    if (!this.oCurrentProviderLocationInfo.phone && this.oCurrentProviderLocationInfo.phoneExt) {
-      this.addService.fnRaiseWarningDlg("Missing Phone", "Please enter the phone number.");
-      return;
-  }
-    let timeValueInvalid = false;
-    const hasImproperNextDayHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some(hour => {
-      if ((hour.openTimeValue   && hour.closeTimeValue === "") || (hour.openTimeValue === '' && hour.closeTimeValue) ) {
-        //if start and end date as null skip it because they are default values
-        timeValueInvalid = true;
-      }
-   
-      const openHour = parseInt(hour.openTimeValue.split(":")[0], 10); // Convert open time hour part to integer
-      const closeHour = parseInt(hour.closeTimeValue.split(":")[0], 10); // Convert close time hour part to integer
-  
-      return openHour > closeHour || (openHour === closeHour && hour.openTimeValue >= hour.closeTimeValue); // Checks if time spans over to next day improperly
-    });
-    if(timeValueInvalid){
-      this.addService.fnRaiseWarningDlg("Incomplete Hours" ," Please Fill both open and close time");
-      return;
-    }
-  
-    if (hasImproperNextDayHours) {
-      this.addService.fnRaiseWarningDlg("Invalid Hours", "End time has been exceed for the day.");
-      return; // Stop it if invalid hours are shown
-    }
-    const hasOverlappingHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some((currentHour, index, array) => {
-      const currentOpen = currentHour.openTimeValue;
-      const currentClose = currentHour.closeTimeValue;
-      return array.some((checkHour, checkIndex) => {
-          if (index === checkIndex) return false; // Don't compare with itself
-          if (currentHour.dayOfWeek !== checkHour.dayOfWeek) return false; // Only compare same days
+<div class="form-group col-md-2">
+  <select class="form-control form-control-custom" id="openTime{{i}}" name="openTime{{i}}"
+    [(ngModel)]="oCurrentProviderLocationInfo.providerSvcLocHours[i].openTimeValue">
+    <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+  </select>
+</div>
 
-          const checkOpen = checkHour.openTimeValue;
-          const checkClose = checkHour.closeTimeValue;
-          // Check for overlap
-          return (currentOpen < checkClose && currentClose > checkOpen); // Overlap condition
-      });
+<div class="form-group col-md-1">
+  To
+</div>
+
+<div class="form-group col-md-2">
+  <select class="form-control form-control-custom" id="closeTime{{i}}" name="closeTime{{i}}"
+    [(ngModel)]="oCurrentProviderLocationInfo.providerSvcLocHours[i].closeTimeValue">
+    <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+  </select>
+</div>
+
+timeOptions: string[] = [];
+
+ngOnInit() {
+  this.generateTimeOptions();
+}
+
+generateTimeOptions() {
+  const times = [];
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < 48; i++) { // 48 intervals of 30 minutes in a day
+    const hours = start.getHours() % 12 || 12; // Convert to 12-hour format
+    const minutes = start.getMinutes().toString().padStart(2, '0');
+    const period = start.getHours() < 12 ? 'AM' : 'PM';
+    times.push(${hours}:${minutes} ${period});
+    start.setMinutes(start.getMinutes() + 30); // Increment by 30 minutes
+  }
+
+  this.timeOptions = times;
+}
+fnAddLocationDetails() {
+  if (!this.bIsServiceAddressValidated && !this.bIsInvalidAddressAllowed) {
+    this.addService.fnRaiseWarningDlg("Invalid", "Please enter a valid address");
+    return;
+  }
+  
+  if (!this.oCurrentProviderLocationInfo.phone && this.oCurrentProviderLocationInfo.phoneExt) {
+    this.addService.fnRaiseWarningDlg("Missing Phone", "Please enter the phone number.");
+    return;
+  }
+
+  let timeValueInvalid = false;
+  const hasImproperNextDayHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some(hour => {
+    if ((hour.openTimeValue && hour.closeTimeValue === "") || (hour.openTimeValue === '' && hour.closeTimeValue)) {
+      // If start and end date as null skip it because they are default values
+      timeValueInvalid = true;
+    }
+
+    const openParts = hour.openTimeValue.split(/[: ]/); // Splitting time and period
+    const closeParts = hour.closeTimeValue.split(/[: ]/);
+    
+    const openHour = parseInt(openParts[0], 10);
+    const closeHour = parseInt(closeParts[0], 10);
+    const openMinutes = parseInt(openParts[1], 10);
+    const closeMinutes = parseInt(closeParts[1], 10);
+    const openPeriod = openParts[2];
+    const closePeriod = closeParts[2];
+
+    // Convert 12-hour format to 24-hour format for easier comparison
+    const open24Hour = openHour % 12 + (openPeriod === 'PM' ? 12 : 0);
+    const close24Hour = closeHour % 12 + (closePeriod === 'PM' ? 12 : 0);
+
+    // Check if the open time is later than the close time or if they are the same and open minutes >= close minutes
+    return open24Hour > close24Hour || (open24Hour === close24Hour && openMinutes >= closeMinutes);
+  });
+
+  if (timeValueInvalid) {
+    this.addService.fnRaiseWarningDlg("Incomplete Hours", "Please fill both open and close time");
+    return;
+  }
+
+  if (hasImproperNextDayHours) {
+    this.addService.fnRaiseWarningDlg("Invalid Hours", "End time exceeds the allowed period for the day.");
+    return; // Stop if invalid hours are detected
+  }
+
+  const hasOverlappingHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some((currentHour, index, array) => {
+    const [currentOpenTime, currentOpenPeriod] = currentHour.openTimeValue.split(' ');
+    const [currentCloseTime, currentClosePeriod] = currentHour.closeTimeValue.split(' ');
+
+    const currentOpen24Hour = parseInt(currentOpenTime.split(':')[0], 10) % 12 + (currentOpenPeriod === 'PM' ? 12 : 0);
+    const currentClose24Hour = parseInt(currentCloseTime.split(':')[0], 10) % 12 + (currentClosePeriod === 'PM' ? 12 : 0);
+
+    return array.some((checkHour, checkIndex) => {
+      if (index === checkIndex) return false; // Don't compare with itself
+      if (currentHour.dayOfWeek !== checkHour.dayOfWeek) return false; // Only compare same days
+
+      const [checkOpenTime, checkOpenPeriod] = checkHour.openTimeValue.split(' ');
+      const [checkCloseTime, checkClosePeriod] = checkHour.closeTimeValue.split(' ');
+
+      const checkOpen24Hour = parseInt(checkOpenTime.split(':')[0], 10) % 12 + (checkOpenPeriod === 'PM' ? 12 : 0);
+      const checkClose24Hour = parseInt(checkCloseTime.split(':')[0], 10) % 12 + (checkClosePeriod === 'PM' ? 12 : 0);
+
+      // Check for overlap
+      return (currentOpen24Hour < checkClose24Hour && currentClose24Hour > checkOpen24Hour);
+    });
   });
 
   if (hasOverlappingHours) {
-      
-      this.addService.fnRaiseWarningDlg("Overlap Detected", "Office hours cannot overlap for the same day.");
-    
-      
-      return; // Stop it  if overlap detected
+    this.addService.fnRaiseWarningDlg("Overlap Detected", "Office hours cannot overlap for the same day.");
+    return; // Stop if overlap is detected
   }
+}
