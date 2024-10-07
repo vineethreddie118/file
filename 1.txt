@@ -1,41 +1,13 @@
- const allDays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];  // Define all possible days
+private convertTo24HourFormat(time12h: string): string {
+  const [time, period] = time12h.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
 
-  this.oCurrentProviderLocationInfo.providerSvcLocHours = this.oCurrentProviderLocationInfo.providerSvcLocHours || []; // Initialize providerSvcLocHours if it's not an array
+  if (period === 'PM' && hours < 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
 
-  const existingDays = this.oCurrentProviderLocationInfo.providerSvcLocHours.map(hour => hour.dayOfWeek); // Find out which days are missing
-  const missingDays = allDays.filter(day => !existingDays.includes(day));
-
-  // Add default hours for missing days
-  missingDays.forEach(missingDay => {
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.push(this.getDefaultHour(missingDay));
-  });
-
-  // Sort providerSvcLocHours by day of the week
-  this.oCurrentProviderLocationInfo.providerSvcLocHours.sort((a, b) => {
-    return allDays.indexOf(a.dayOfWeek) - allDays.indexOf(b.dayOfWeek);
-  });
-
-  // Convert existing times to 24-hour format if needed
-  this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(hour => {
-    // Convert openTimeValue and closeTimeValue from 12-hour to 24-hour format if necessary
-    if (hour.openTimeValue && hour.openTimeValue.includes(' ')) {
-      hour.openTimeValue = this.convertTo24HourFormat(hour.openTimeValue);
-    }
-    if (hour.closeTimeValue && hour.closeTimeValue.includes(' ')) {
-      hour.closeTimeValue = this.convertTo24HourFormat(hour.closeTimeValue);
-    }
-  });
-
-  // Hide the add symbol for all entries initially
-  this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => svcHour.showAddSymbol = false);
-
-  // Track the first entry of each day
-  let seenDays = {};
-
-  // Set `showAddSymbol` to true only for the first entry of each day
-  this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => {
-    if (!seenDays[svcHour.dayOfWeek]) {
-      svcHour.showAddSymbol = true;     // Show the add symbol
-      seenDays[svcHour.dayOfWeek] = true;
-    }
-  });
+  // Pad hours and minutes with leading zeros if necessary
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
