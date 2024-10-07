@@ -1,18 +1,26 @@
- "providerSvcLocHours": [
-                {
-                    "providerSvcLocHoursId": 0,
-                    "providerServiceLocationMapId": 0,
-                    "userId": null,
-                    "dayOfWeek": "MON",
-                    "openTimeValue": "1:30 AM",
-                    "closeTimeValue": "3:30 AM"
-                },
-                {
-                    "providerSvcLocHoursId": 0,
-                    "providerServiceLocationMapId": 0,
-                    "userId": 0,
-                    "dayOfWeek": "TUE",
-                    "openTimeValue": "9:30 PM",
-                    "closeTimeValue": "10:00 PM"
-                }
-            ],
+private prepareTimeValuesForAPI() {
+  this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(hour => {
+    hour.openTimeValue = this.convertTo24HourFormat(hour.openTimeValue);
+    hour.closeTimeValue = this.convertTo24HourFormat(hour.closeTimeValue);
+  });
+}
+
+// Helper function to convert 12-hour time format to 24-hour format
+private convertTo24HourFormat(time12h: string): string {
+  if (!time12h || !time12h.includes(' ')) {
+    console.error("Invalid time format: ", time12h);
+    return ''; // Return an empty string or handle it as needed
+  }
+
+  const [time, period] = time12h.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+
+  if (period === 'PM' && hours < 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  // Pad hours and minutes with leading zeros if necessary
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
