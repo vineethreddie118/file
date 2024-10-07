@@ -1,14 +1,19 @@
- generateTimeOptions() {
-    const times = [];
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-  
-    for (let i = 0; i < 48; i++) { // 48 intervals of 30 minutes in a day
-      const hours = start.getHours().toString().padStart(2, '0'); // Convert to 24-hour format and pad with zero if needed
-      const minutes = start.getMinutes().toString().padStart(2, '0');
-      times.push(`${hours}:${minutes}`);
-      start.setMinutes(start.getMinutes() + 30); // Increment by 30 minutes
-    }
-  
-    this.timeOptions = times;
+generateTimeOptions() {
+  const times = [];
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < 48; i++) { // 48 intervals of 30 minutes in a day
+    let hours = start.getHours();
+    const minutes = start.getMinutes().toString().padStart(2, '0');
+    const period = hours >= 12 ? 'PM' : 'AM';
+
+    // Convert to 12-hour format
+    hours = hours % 12 || 12; // Convert 0 or 12 to 12 for 12-hour clock
+
+    times.push(`${hours}:${minutes} ${period}`);
+    start.setMinutes(start.getMinutes() + 30); // Increment by 30 minutes
   }
+
+  this.timeOptions = times;
+}
