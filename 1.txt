@@ -1,45 +1,76 @@
- let timeValueInvalid = false;
-  const hasImproperNextDayHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some(hour => {
-    if ((hour.openTimeValue && hour.closeTimeValue === "") || (hour.openTimeValue === '' && hour.closeTimeValue)) {
-      timeValueInvalid = true;
-    }
+let timeValueInvalid = false;
+const hasImproperNextDayHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some(hour => {
+  if ((hour.openTimeValue && hour.closeTimeValue === "") || (hour.openTimeValue === '' && hour.closeTimeValue)) {
+    timeValueInvalid = true;
+  }
 
-    const [openHour, openMinutes] = hour.openTimeValue.split(':').map(Number);
-    const [closeHour, closeMinutes] = hour.closeTimeValue.split(':').map(Number);
+  const openTime24 = this.convertTo24HourFormat(hour.openTimeValue);
+  const closeTime24 = this.convertTo24HourFormat(hour.closeTimeValue);
 
-    // Check if the open time is later than the close time or if they are the same and open minutes >= close minutes
-    return openHour > closeHour || (openHour === closeHour && openMinutes >= closeMinutes);
+  const [openHour, openMinutes] = openTime24.split(':').map(Number);
+  const [closeHour, closeMinutes] = closeTime24.split(':').map(Number);
+
+  // Check if the open time is later than the close time or if they are the same and open minutes >= close minutes
+  return openHour > closeHour || (openHour === closeHour && openMinutes >= closeMinutes);
+});
+
+if (timeValueInvalid) {
+  this.addService.fnRaiseWarningDlg("Incomplete Hours", "Please fill both open and close time");
+  return;
+}
+
+if (hasImproperNextDayHours) {
+  this.addService.fnRaiseWarningDlg("Invalid Hours", "End time exceeds the allowed period for the day.");
+  return;
+}
+
+const hasOverlappingHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some((currentHour, index, array) => {
+  const currentOpenTime24 = this.convertTo24HourFormat(currentHour.openTimeValue);
+  const currentCloseTime24 = this.convertTo24HourFormat(currentHour.closeTimeValue);
+
+  const [currentOpenHour, currentOpenMinutes] = currentOpenTime24.split(':').map(Number);
+  const [currentCloseHour, currentCloseMinutes] = currentCloseTime24.split(':').map(Number);
+
+  return array.some((checkHour, checkIndex) => {
+    if (index === checkIndex) return false;
+    if (currentHour.dayOfWeek !== checkHour.dayOfWeek) return false;
+
+    const checkOpenTime24 = this.convertTo24HourFormat(checkHour.openTimeValue);
+    const checkCloseTime24 = this.convertTo24HourFormat(checkHour.closeTimeValue);
+
+    const [checkOpenHour, checkOpenMinutes] = checkOpenTime24.split(':').map(Number);
+    const [checkCloseHour, checkCloseMinutes] = checkCloseTime24.split(':').map(Number);
+
+    // Check for overlap
+    return (
+      (currentOpenHour < checkCloseHour || (currentOpenHour === checkCloseHour && currentOpenMinutes < checkCloseMinutes)) &&
+      (currentCloseHour > checkOpenHour || (currentCloseHour === checkOpenHour && currentCloseMinutes > checkOpenMinutes))
+    );
   });
+});
 
-  if (timeValueInvalid) {
-    this.addService.fnRaiseWarningDlg("Incomplete Hours", "Please fill both open and close time");
-    return;
+if (hasOverlappingHours) {
+  this.addService.fnRaiseWarningDlg("Overlap Detected", "Office hours cannot overlap for the same day.");
+  return;
+}
+
+// Helper function to convert 12-hour time format to 24-hour format
+private convertTo24HourFormat(time12h: string): string {
+  // Check if time12h is defined and contains 'AM' or 'PM'
+  if (!time12h || !time12h.includes(' ')) {
+    console.error("Invalid time format: ", time12h);
+    return ''; // Return an empty string or handle it as needed
   }
 
-  if (hasImproperNextDayHours) {
-    this.addService.fnRaiseWarningDlg("Invalid Hours", "End time exceeds the allowed period for the day.");
-    return;
+  const [time, period] = time12h.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+
+  if (period === 'PM' && hours < 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
   }
 
-  const hasOverlappingHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some((currentHour, index, array) => {
-    const [currentOpenHour, currentOpenMinutes] = currentHour.openTimeValue.split(':').map(Number);
-    const [currentCloseHour, currentCloseMinutes] = currentHour.closeTimeValue.split(':').map(Number);
-
-    return array.some((checkHour, checkIndex) => {
-      if (index === checkIndex) return false;
-      if (currentHour.dayOfWeek !== checkHour.dayOfWeek) return false;
-
-      const [checkOpenHour, checkOpenMinutes] = checkHour.openTimeValue.split(':').map(Number);
-      const [checkCloseHour, checkCloseMinutes] = checkHour.closeTimeValue.split(':').map(Number);
-
-      return (
-        (currentOpenHour < checkCloseHour || (currentOpenHour === checkCloseHour && currentOpenMinutes < checkCloseMinutes)) &&
-        (currentCloseHour > checkOpenHour || (currentCloseHour === checkOpenHour && currentCloseMinutes > checkOpenMinutes))
-      );
-    });
-  });
-
-  if (hasOverlappingHours) {
-    this.addService.fnRaiseWarningDlg("Overlap Detected", "Office hours cannot overlap for the same day.");
-    return;
-  }
+  // Pad hours and minutes with leading zeros if necessary
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
