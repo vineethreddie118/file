@@ -1,107 +1,52 @@
 <table class="table table-bordered">
-				<thead>
-					<th class="check text-center">Action</th>
-					<th>ID Type</th>
-					<th>ID Number</th>
-					<th>State</th>
-					<th>Effective Date</th>
-					<th>Expiration Date</th>
-					<th>Practice Location</th>
-					<th>Billing Location</th>
-				</thead>
-				<tbody>
-					<ng-container *ngFor="let alternateIdAtInfo of oAlternateIdsInfo.providerLocationAlternateIds; let i=index"
-					>
-						<tr *ngFor="let billingInfo of alternateIdAtInfo.providerLocBillingInfo">
-
-							<td class="text-center">
-								<div class="d-flex flex-sm-row flex-column justify-content-center">
-									<i class="fa-solid fa-pen-to-square btn btn-primaryicon btn-sm mb-sm-0 mb-2"
-										style="margin-right: 0.25rem;"
-										[ngClass]="{'disableDiv' : (oProviderLocation.providerLocationInfo==undefined) || (oProviderLocation.providerLocationInfo?.length==0)}"
-										data-toggle="tooltip" title="Edit Alternate ID" (click)="editAlternateId(i)"></i>
-									<i class="fa-solid fa-trash-alt btn btn-primaryicon btn-sm"
-										data-toggle="tooltip"
-										title="Delete"
-										[ngClass]="{'disableDiv' : formTemplate.editMode}"
-										(click)="delteAlternateId(i)"></i>
-								</div>
-							</td>
-							<td>{{alternateIdAtInfo.locationIdTypeDesc}}</td>
-							<td>{{alternateIdAtInfo.locationAltId}}</td>
-							<td>{{alternateIdAtInfo.state}}</td>
-							<td>{{alternateIdAtInfo.effectiveDate | date: 'yyyy-MM-dd'}}</td>
-							<td>{{alternateIdAtInfo.expirationDate | date: 'yyyy-MM-dd'}}</td>
-							<td>
-								<div style="display: flex; flex-direction: column;">
-									<div>Site Name: {{alternateIdAtInfo.locationName}}</div>
-									<div *ngIf="alternateIdAtInfo.address1">{{alternateIdAtInfo.address1}}</div>
-									<div *ngIf="alternateIdAtInfo.address2">{{alternateIdAtInfo.address2}}</div>
-									<div>
-										{{alternateIdAtInfo.city}}, {{alternateIdAtInfo.county}},{{alternateIdAtInfo.stateCode}},
-										{{alternateIdAtInfo.zip}}
-									</div>
-								</div>
-							</td>
-							<td>
-								<div style="display: flex; flex-direction: column;">
-									<div>Payee Name: {{billingInfo.payeeName}}</div>
-									<div *ngIf="billingInfo.billingAddress1">{{billingInfo.billingAddress1}}</div>
-									<div *ngIf="billingInfo.billingAddress2">{{billingInfo.billingAddress2}}</div>
-									<div>
-										{{billingInfo.billingCity}}, {{billingInfo.billingCounty}},{{billingInfo.billingStateCode}},
-										{{billingInfo.billingZip}}
-									</div>
-								</div>
-							</td>
-						</tr>
-					</ng-container>
-				</tbody>
-			</table>
-
-in the above code i added billing info in the table in the same way  i want to add in the below table also
-
-<table class="table table-bordered">
-        <thead>
-          <th class="check text-center">Action</th>
-          <th>Plan</th>
-          <!-- <th>State</th> -->
-          <th>Network</th>
-          <!-- <th>Benefit Type</th> -->
-          <th>Effective Date</th>
-          <th>Expiration Date</th>
-          <th>Participation</th>
-          <th>Foreign Network Flag</th>
-          <th>Location</th>
-          
-        </thead>
-        <tbody>
-          <ng-container *ngFor="let planAt of oProviderlocationBenefitPlans.serviceLocationBenefitPlan; let i=index">
+    <thead>
+        <th class="check text-center">Action</th>
+        <th>Plan</th>
+        <th>Network</th>
+        <th>Effective Date</th>
+        <th>Expiration Date</th>
+        <th>Participation</th>
+        <th>Foreign Network Flag</th>
+        <th>Location</th>
+        <th>Billing Location</th> <!-- Added new column for Billing Location -->
+    </thead>
+    <tbody>
+        <ng-container *ngFor="let planAt of oProviderlocationBenefitPlans.serviceLocationBenefitPlan; let i=index">
             <tr *ngIf="true !== planAt?.isDelete">
-              <td class="text-center">
-                <div class="d-flex flex-sm-row flex-column justify-content-center">
-                  <i class="fa-solid fa-pen-to-square btn btn-primaryicon btn-sm mb-sm-0 mb-2"
-                    style="margin-right: 0.25rem;" data-toggle="tooltip" title="Edit Benefit Plan"
-                    (click)=" openForm(); fnEditBenefitPlan(planAt, i);"></i>
-                  <i class="fa-solid fa-trash-alt btn btn-primaryicon btn-sm" data-toggle="tooltip" title="Delete"
-                    (click)="fnDeleteBenefitPlan(modalDeleteBenefitPlanConfirmation, planAt)"></i>
-                </div>
-              </td>
-              <td>{{planAt.benefitPlanName}}</td>
-              <td>{{planAt.network}}</td>
-              <td>{{planAt.effectiveDate | date: 'yyyy-MM-dd'}}</td>
-              <td>{{planAt.expirationDate | date: 'yyyy-MM-dd'}}</td>
-              <td>{{oLookupInfo.participanCodes[planAt.participationCodeId-1].description}}</td>
-              <td>{{planAt.foreignNetworkFlag}}</td>
-              <td>
-                <div style="display:flex; flex-direction: column;">
-                  <div>{{planAt.siteName}}</div>
-                  <div>({{planAt.address1}}{{planAt?.address2 ? ' ' + planAt?.address2 : ''}},
-                    {{planAt.city}},{{planAt.county ? planAt.county : ''}} {{planAt.stateCode}}, {{planAt.zip}})</div>
-                </div>
-              </td>
+                <td class="text-center">
+                    <div class="d-flex flex-sm-row flex-column justify-content-center">
+                        <i class="fa-solid fa-pen-to-square btn btn-primaryicon btn-sm mb-sm-0 mb-2"
+                            style="margin-right: 0.25rem;" data-toggle="tooltip" title="Edit Benefit Plan"
+                            (click)=" openForm(); fnEditBenefitPlan(planAt, i);"></i>
+                        <i class="fa-solid fa-trash-alt btn btn-primaryicon btn-sm" data-toggle="tooltip" title="Delete"
+                            (click)="fnDeleteBenefitPlan(modalDeleteBenefitPlanConfirmation, planAt)"></i>
+                    </div>
+                </td>
+                <td>{{planAt.benefitPlanName}}</td>
+                <td>{{planAt.network}}</td>
+                <td>{{planAt.effectiveDate | date: 'yyyy-MM-dd'}}</td>
+                <td>{{planAt.expirationDate | date: 'yyyy-MM-dd'}}</td>
+                <td>{{oLookupInfo.participanCodes[planAt.participationCodeId-1].description}}</td>
+                <td>{{planAt.foreignNetworkFlag}}</td>
+                <td>
+                    <div style="display:flex; flex-direction: column;">
+                        <div>{{planAt.siteName}}</div>
+                        <div>({{planAt.address1}}{{planAt?.address2 ? ' ' + planAt?.address2 : ''}},
+                            {{planAt.city}},{{planAt.county ? planAt.county : ''}} {{planAt.stateCode}}, {{planAt.zip}})</div>
+                    </div>
+                </td>
+                <td>
+                    <div style="display: flex; flex-direction: column;">
+                        <div>Payee Name: {{planAt.payeeName}}</div> <!-- Display payee name -->
+                        <div *ngIf="planAt.billingAddress1">{{planAt.billingAddress1}}</div> <!-- Display billing address line 1 -->
+                        <div *ngIf="planAt.billingAddress2">{{planAt.billingAddress2}}</div> <!-- Display billing address line 2 if available -->
+                        <div>
+                            {{planAt.billingCity}}, {{planAt.billingCounty}},{{planAt.billingStateCode}},
+                            {{planAt.billingZip}}
+                        </div>
+                    </div>
+                </td>
             </tr>
-          </ng-container>
-
-        </tbody>
-      </table>
+        </ng-container>
+    </tbody>
+</table>
