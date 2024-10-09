@@ -1,52 +1,58 @@
-<table class="table table-bordered">
-    <thead>
-        <th class="check text-center">Action</th>
-        <th>Plan</th>
-        <th>Network</th>
-        <th>Effective Date</th>
-        <th>Expiration Date</th>
-        <th>Participation</th>
-        <th>Foreign Network Flag</th>
-        <th>Location</th>
-        <th>Billing Location</th> <!-- Added new column for Billing Location -->
-    </thead>
-    <tbody>
-        <ng-container *ngFor="let planAt of oProviderlocationBenefitPlans.serviceLocationBenefitPlan; let i=index">
-            <tr *ngIf="true !== planAt?.isDelete">
-                <td class="text-center">
-                    <div class="d-flex flex-sm-row flex-column justify-content-center">
-                        <i class="fa-solid fa-pen-to-square btn btn-primaryicon btn-sm mb-sm-0 mb-2"
-                            style="margin-right: 0.25rem;" data-toggle="tooltip" title="Edit Benefit Plan"
-                            (click)=" openForm(); fnEditBenefitPlan(planAt, i);"></i>
-                        <i class="fa-solid fa-trash-alt btn btn-primaryicon btn-sm" data-toggle="tooltip" title="Delete"
-                            (click)="fnDeleteBenefitPlan(modalDeleteBenefitPlanConfirmation, planAt)"></i>
-                    </div>
-                </td>
-                <td>{{planAt.benefitPlanName}}</td>
-                <td>{{planAt.network}}</td>
-                <td>{{planAt.effectiveDate | date: 'yyyy-MM-dd'}}</td>
-                <td>{{planAt.expirationDate | date: 'yyyy-MM-dd'}}</td>
-                <td>{{oLookupInfo.participanCodes[planAt.participationCodeId-1].description}}</td>
-                <td>{{planAt.foreignNetworkFlag}}</td>
-                <td>
-                    <div style="display:flex; flex-direction: column;">
-                        <div>{{planAt.siteName}}</div>
-                        <div>({{planAt.address1}}{{planAt?.address2 ? ' ' + planAt?.address2 : ''}},
-                            {{planAt.city}},{{planAt.county ? planAt.county : ''}} {{planAt.stateCode}}, {{planAt.zip}})</div>
-                    </div>
-                </td>
-                <td>
-                    <div style="display: flex; flex-direction: column;">
-                        <div>Payee Name: {{planAt.payeeName}}</div> <!-- Display payee name -->
-                        <div *ngIf="planAt.billingAddress1">{{planAt.billingAddress1}}</div> <!-- Display billing address line 1 -->
-                        <div *ngIf="planAt.billingAddress2">{{planAt.billingAddress2}}</div> <!-- Display billing address line 2 if available -->
-                        <div>
-                            {{planAt.billingCity}}, {{planAt.billingCounty}},{{planAt.billingStateCode}},
-                            {{planAt.billingZip}}
-                        </div>
-                    </div>
-                </td>
-            </tr>
-        </ng-container>
-    </tbody>
-</table>
+
+  private fnFetchData(isRefresh: boolean = false): void {
+    let arrCallsToMake = [
+      false === isRefresh ? this.searchService.getBenefitsLocationLookup().pipe(catchError((err) => {
+        this.bIsLoading = false;
+        this.addService.fnRaiseGenericAlert('getBenefitsLocationLookup', err);
+        return of(null);
+      })) : of(null),
+      this.searchService.getSoloProviderLocationBenefitPlans(this.nProviderId).pipe(catchError((err) => {
+        this.bIsLoading = false;
+        this.addService.fnRaiseGenericAlert('getSoloProviderLocationBenefitPlans', err);
+        return of(null);
+      })),
+      false === isRefresh ? this.searchService.getPracticeLocationDetails(this.nProviderId).pipe(catchError((err) => {
+        this.bIsLoading = false;
+        this.addService.fnRaiseGenericAlert('getPracticeLocationDetails', err);
+        return of(null);
+      })) : of(null),
+      this.searchService.getSoloProviderInactiveLocationBenefitPlans(this.nProviderId).pipe(catchError((err) => {
+        this.bIsLoading = false;
+        this.addService.fnRaiseGenericAlert('getSoloProviderInactiveLocationBenefitPlans', err);
+        return of(null);
+      })),
+    ];
+
+    this.bIsLoading = true;
+
+    forkJoin([...arrCallsToMake]).pipe(
+      map(([arrLookups, benefitPlanLocationInfo, oLocations, inactivePlansData]) => {
+
+        if(!!arrLookups) {
+          this.oLookupInfo = { ...arrLookups[0] };
+          this.arrFilteredBenefitPlans = this.oLookupInfo.benefitPlans;
+        }
+
+        this.oProviderlocationBenefitPlans = { ...benefitPlanLocationInfo };
+        if (!this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan) {
+          this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
+        }
+        if(!!oLocations) {
+          this.oProviderLocation = { ...oLocations };
+          this.arrFilteredLocations = this.oProviderLocation.providerLocationInfo;
+        }
+        this.oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
+        if(inactivePlansData){
+          this.oInactiveProviderlocationBenefitPlans = { ...inactivePlansData };
+        }
+        this.bIsLoading = false;
+      }),
+      catchError(err => {
+        if (!this.oProviderlocationBenefitPlans) {
+          this.oProviderlocationBenefitPlans = {}
+          this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
+        }
+        return throwError(err);
+      })
+    ).subscribe();
+  }
