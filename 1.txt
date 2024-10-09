@@ -1,16 +1,6 @@
-
-    <div class="col-12" #inactivePlans *ngIf="bShowInactivePlans">
-      <h3 class="font-weight-bold pl-0">
-        <div class="d-flex align-items-center">
-          Expired Benefit Plans
-          <div class="d-flex align-items-center ml-auto">
-            <button class="btn btn-link btn-sm ml-auto" style="line-height: 1;"
-              (click)="fnSetInactiveBefPlansVisibility(false)">Hide Expired Benefit Plans</button>
-          </div>
-        </div>
-      </h3>
-      <table class="table table-bordered">
+<table class="table table-bordered">
         <thead>
+          <th class="check text-center">Action</th>
           <th>Plan</th>
           <!-- <th>State</th> -->
           <th>Network</th>
@@ -19,106 +9,51 @@
           <th>Expiration Date</th>
           <th>Participation</th>
           <th>Foreign Network Flag</th>
-          <th>Location</th>
+          <th>service Location</th>
+          <th>Billing Location</th>
         </thead>
         <tbody>
-          <tr *ngFor="let planAt of oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan; let i=index">
-            <!-- <td class="text-center">
-              <div class="d-flex flex-sm-row flex-column justify-content-center">
-                <i class="fa-solid fa-pen-to-square btn btn-primaryicon btn-sm mb-sm-0 mb-2"
-                   style="margin-right: 0.25rem;"
-                   data-toggle="tooltip" title="Edit Benefit Plan" (click)=" openForm(); fnEditBenefitPlan(planAt, i);"></i>
-                <i class="fa-solid fa-trash-alt btn btn-primaryicon btn-sm" data-toggle="tooltip" title="Delete" (click)="fnDeleteBenefitPlan(modalDeleteBenefitPlanConfirmation, planAt)"></i>
-              </div>
-            </td> -->
-            <td>{{planAt.benefitPlanName}}</td>
-            <!-- <td>{{planAt.stateCode}}</td> -->
-            <!-- <td>{{planAt.benefitTypeID}}</td> -->
-            <td>{{planAt.network}}</td>
-            <td>{{planAt.effectiveDate | date: 'yyyy-MM-dd'}}</td>
-            <td>{{planAt.expirationDate | date: 'yyyy-MM-dd'}}</td>
-            <td>{{oLookupInfo.participanCodes[planAt.participationCodeId-1].description}}</td>
-            <td>{{planAt.foreignNetworkFlag}}</td>
-            <td>
-              <div style="display:flex; flex-direction: column;">
-                <div>{{planAt.siteName}}</div>
+          <ng-container *ngFor="let planAt of oProviderlocationBenefitPlans.serviceLocationBenefitPlan; let i=index">
+            <ng-container *ngFor="let billing of planAt.benefitPlanBillingInfo">
+            <tr  *ngIf="true !== planAt?.isDelete" >
+          
+              <td class="text-center">
+                <div class="d-flex flex-sm-row flex-column justify-content-center">
+                  <i class="fa-solid fa-pen-to-square btn btn-primaryicon btn-sm mb-sm-0 mb-2"
+                    style="margin-right: 0.25rem;" data-toggle="tooltip" title="Edit Benefit Plan"
+                    (click)=" openForm(); fnEditBenefitPlan(planAt, i);"></i>
+                  <i class="fa-solid fa-trash-alt btn btn-primaryicon btn-sm" data-toggle="tooltip" title="Delete"
+                    (click)="fnDeleteBenefitPlan(modalDeleteBenefitPlanConfirmation, planAt)"></i>
+                </div>
+              </td>
+              <td>{{planAt.benefitPlanName}}</td>
+              <td>{{planAt.network}}</td>
+              <td>{{planAt.effectiveDate | date: 'yyyy-MM-dd'}}</td>
+              <td>{{planAt.expirationDate | date: 'yyyy-MM-dd'}}</td>
+              <td>{{oLookupInfo.participanCodes[planAt.participationCodeId-1].description}}</td>
+              <td>{{planAt.foreignNetworkFlag}}</td>
+              <td>
+                <div style="display:flex; flex-direction: column;">
+                  <div>{{planAt.siteName}}</div>
+                  <div>({{planAt.address1}}{{planAt?.address2 ? ' ' + planAt?.address2 : ''}},
+                    {{planAt.city}},{{planAt.county ? planAt.county : ''}} {{planAt.stateCode}}, {{planAt.zip}})</div>
+                </div>
+              </td>
+              
+              <!-- Billing Location Column -->
+              <td>
+                <div style="display:flex; flex-direction: column;" >
+                    <div>Payee Name: {{billing.payeeName}}</div>
+                    <div *ngIf="billing.billingAddress1">{{billing.billingAddress1}}</div>
+                    <div *ngIf="billing.billingAddress2">{{billing.billingAddress2}}</div>
+                    <div>{{billing.billingCity}}, {{billing.billingCounty}}, {{billing.billingStateCode}}, {{billing.billingZip}}</div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+          </ng-container>
 
-                <div>({{planAt.address1}}{{planAt?.address2 ? ' ' + planAt?.address2 : ''}},
-                  {{planAt.city}},{{planAt.county ? planAt.county : ''}} {{planAt.stateCode}}, {{planAt.zip}})</div>
-              </div>
-            </td>
-          </tr>
         </tbody>
       </table>
 
     </div>
-
-private fnFetchData(isRefresh: boolean = false): void {
-    let arrCallsToMake = [
-      false === isRefresh ? this.searchService.getBenefitsLocationLookup().pipe(catchError((err) => {
-        this.bIsLoading = false;
-        this.addService.fnRaiseGenericAlert('getBenefitsLocationLookup', err);
-        return of(null);
-      })) : of(null),
-      this.searchService.getSoloProviderLocationBenefitPlans(this.nProviderId).pipe(catchError((err) => {
-        this.bIsLoading = false;
-        this.addService.fnRaiseGenericAlert('getSoloProviderLocationBenefitPlans', err);
-        return of(null);
-      })),
-      false === isRefresh ? this.searchService.getPracticeLocationDetails(this.nProviderId).pipe(catchError((err) => {
-        this.bIsLoading = false;
-        this.addService.fnRaiseGenericAlert('getPracticeLocationDetails', err);
-        return of(null);
-      })) : of(null),
-      this.searchService.getSoloProviderInactiveLocationBenefitPlans(this.nProviderId).pipe(catchError((err) => {
-        this.bIsLoading = false;
-        this.addService.fnRaiseGenericAlert('getSoloProviderInactiveLocationBenefitPlans', err);
-        return of(null);
-      })),
-    ];
-
-    this.bIsLoading = true;
-
-    forkJoin([...arrCallsToMake]).pipe(
-      map(([arrLookups, benefitPlanLocationInfo, oLocations, inactivePlansData]) => {
-
-        if(!!arrLookups) {
-          this.oLookupInfo = { ...arrLookups[0] };
-          this.arrFilteredBenefitPlans = this.oLookupInfo.benefitPlans;
-        }
-
-        this.oProviderlocationBenefitPlans = { ...benefitPlanLocationInfo };
-        if (!this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan) {
-          this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
-        }
-        if(!!oLocations) {
-          this.oProviderLocation = { ...oLocations };
-          this.arrFilteredLocations = this.oProviderLocation.providerLocationInfo;
-        }
-        this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan.forEach(plan => {
-          this.linkBillingLocsToBenefitPlans(plan);
-        });
-        
-        this.oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
-        if(inactivePlansData){
-          this.oInactiveProviderlocationBenefitPlans = { ...inactivePlansData };
-        }
-        this.bIsLoading = false;
-      }),
-      catchError(err => {
-        if (!this.oProviderlocationBenefitPlans) {
-          this.oProviderlocationBenefitPlans = {}
-          this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
-        }
-        return throwError(err);
-      })
-    ).subscribe();
-  }
-  private linkBillingLocsToBenefitPlans(plan: any) {
-    for (let provLoc of this.oProviderLocation.providerLocationInfo) {
-      if (provLoc.serviceLocationId === plan.serviceLocationID) {
-        plan.benefitPlanBillingInfo = [...provLoc.providerLocBillingInfo];
-        break;
-      }
-    }
-  }
