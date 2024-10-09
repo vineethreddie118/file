@@ -3,6 +3,12 @@
     <div>{{planAt.siteName}}</div>
     <div>({{planAt.address1}}{{planAt?.address2 ? ' ' + planAt?.address2 : ''}},
       {{planAt.city}},{{planAt.county ? planAt.county : ''}} {{planAt.stateCode}}, {{planAt.zip}})</div>
+  </div>
+</td>
+
+<!-- Billing Location Column -->
+<td>
+  <div style="display:flex; flex-direction: column;" *ngIf="planAt.benefitPlanBillingInfo && planAt.benefitPlanBillingInfo.length">
     <div *ngFor="let billing of planAt.benefitPlanBillingInfo">
       <div>Payee Name: {{billing.payeeName}}</div>
       <div *ngIf="billing.billingAddress1">{{billing.billingAddress1}}</div>
@@ -11,17 +17,3 @@
     </div>
   </div>
 </td>
-
-this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan.forEach(plan => {
-  this.linkBillingLocsToBenefitPlans(plan);
-});
-
-
-private linkBillingLocsToBenefitPlans(plan: any) {
-  for (let provLoc of this.oProviderLocation.providerLocationInfo) {
-    if (provLoc.serviceLocationId === plan.serviceLocationID) {
-      plan.benefitPlanBillingInfo = [...provLoc.providerLocBillingInfo];
-      break;
-    }
-  }
-}
