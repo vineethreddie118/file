@@ -1,279 +1,225 @@
-	<table class="table table-bordered">
-				<thead>
-					<th class="check text-center">Action</th>
-					<th>ID Type</th>
-					<th>ID Number</th>
-					<th>State</th>
-					<th>Effective Date</th>
-					<th>Expiration Date</th>
-					<th>Practice Location</th>
-					<th>Billing Location</th>
-				</thead>
-				<tbody>
-					<ng-container *ngFor="let alternateIdAtInfo of oAlternateIdsInfo.providerLocationAlternateIds; let i=index"
-					>
-						<tr *ngFor="let billingInfo of alternateIdAtInfo.providerLocBillingInfo">
+ <table class="table table-bordered">
+        <thead>
+          <th class="check text-center">Action</th>
+          <th>Plan</th>
+          <!-- <th>State</th> -->
+          <th>Network</th>
+          <!-- <th>Benefit Type</th> -->
+          <th>Effective Date</th>
+          <th>Expiration Date</th>
+          <th>Participation</th>
+          <th>Foreign Network Flag</th>
+          <th>Location</th>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let planAt of oProviderlocationBenefitPlans.serviceLocationBenefitPlan; let i=index">
+            <tr *ngIf="true !== planAt?.isDelete">
+              <td class="text-center">
+                <div class="d-flex flex-sm-row flex-column justify-content-center">
+                  <i class="fa-solid fa-pen-to-square btn btn-primaryicon btn-sm mb-sm-0 mb-2"
+                    style="margin-right: 0.25rem;" data-toggle="tooltip" title="Edit Benefit Plan"
+                    (click)=" openForm(); fnEditBenefitPlan(planAt, i);"></i>
+                  <i class="fa-solid fa-trash-alt btn btn-primaryicon btn-sm" data-toggle="tooltip" title="Delete"
+                    (click)="fnDeleteBenefitPlan(modalDeleteBenefitPlanConfirmation, planAt)"></i>
+                </div>
+              </td>
+              <td>{{planAt.benefitPlanName}}</td>
+              <td>{{planAt.network}}</td>
+              <td>{{planAt.effectiveDate | date: 'yyyy-MM-dd'}}</td>
+              <td>{{planAt.expirationDate | date: 'yyyy-MM-dd'}}</td>
+              <td>{{oLookupInfo.participanCodes[planAt.participationCodeId-1].description}}</td>
+              <td>{{planAt.foreignNetworkFlag}}</td>
+              <td>
+                <div style="display:flex; flex-direction: column;">
+                  <div>{{planAt.siteName}}</div>
+                  <div>({{planAt.address1}}{{planAt?.address2 ? ' ' + planAt?.address2 : ''}},
+                    {{planAt.city}},{{planAt.county ? planAt.county : ''}} {{planAt.stateCode}}, {{planAt.zip}})</div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
 
-							<td class="text-center">
-								<div class="d-flex flex-sm-row flex-column justify-content-center">
-									<i class="fa-solid fa-pen-to-square btn btn-primaryicon btn-sm mb-sm-0 mb-2"
-										style="margin-right: 0.25rem;"
-										[ngClass]="{'disableDiv' : (oProviderLocation.providerLocationInfo==undefined) || (oProviderLocation.providerLocationInfo?.length==0)}"
-										data-toggle="tooltip" title="Edit Alternate ID" (click)="editAlternateId(i)"></i>
-									<i class="fa-solid fa-trash-alt btn btn-primaryicon btn-sm"
-										data-toggle="tooltip"
-										title="Delete"
-										[ngClass]="{'disableDiv' : formTemplate.editMode}"
-										(click)="delteAlternateId(i)"></i>
-								</div>
-							</td>
-							<td>{{alternateIdAtInfo.locationIdTypeDesc}}</td>
-							<td>{{alternateIdAtInfo.locationAltId}}</td>
-							<td>{{alternateIdAtInfo.state}}</td>
-							<td>{{alternateIdAtInfo.effectiveDate | date: 'yyyy-MM-dd'}}</td>
-							<td>{{alternateIdAtInfo.expirationDate | date: 'yyyy-MM-dd'}}</td>
-							<td>
-								<div style="display: flex; flex-direction: column;">
-									<div>Site Name: {{alternateIdAtInfo.locationName}}</div>
-									<div *ngIf="alternateIdAtInfo.address1">{{alternateIdAtInfo.address1}}</div>
-									<div *ngIf="alternateIdAtInfo.address2">{{alternateIdAtInfo.address2}}</div>
-									<div>
-										{{alternateIdAtInfo.city}}, {{alternateIdAtInfo.county}},{{alternateIdAtInfo.stateCode}},
-										{{alternateIdAtInfo.zip}}
-									</div>
-								</div>
-							</td>
-							<td>
-								<div style="display: flex; flex-direction: column;">
-									<div>Payee Name: {{billingInfo.payeeName}}</div>
-									<div *ngIf="billingInfo.billingAddress1">{{billingInfo.billingAddress1}}</div>
-									<div *ngIf="billingInfo.billingAddress2">{{billingInfo.billingAddress2}}</div>
-									<div>
-										{{billingInfo.billingCity}}, {{billingInfo.billingCounty}},{{billingInfo.billingStateCode}},
-										{{billingInfo.billingZip}}
-									</div>
-								</div>
-							</td>
-						</tr>
-					</ng-container>
-				</tbody>
+        </tbody>
+      </table>
 
- private fnFetchData(): void {
-    this.bIsLoading = true;
-
+private fnFetchData(isRefresh: boolean = false): void {
     let arrCallsToMake = [
-      this.searchService.getProviderLocationAlternateIdLookup().pipe(
-        catchError((err) => {
-          this.bIsLoading = false;
-          this.addService.fnRaiseGenericAlert(
-            'getProviderLocationAlternateIdLookup'
-          );
-          return of(null);
-        })
-      ),
-      this.searchService
-        .getSoloProviderLocationAlternateId(this.nProviderId)
-        .pipe(
-          catchError((err) => {
-            this.bIsLoading = false;
-            this.addService.fnRaiseGenericAlert(
-              'getSoloProviderLocationAlternateId'
-            );
-            return of(null);
-          })
-        ),
-      this.searchService.getPracticeLocationDetails(this.nProviderId).pipe(
-        catchError((err) => {
-          this.bIsLoading = false;
-          this.addService.fnRaiseGenericAlert('getPracticeLocationDetails');
-          return of(null);
-        })
-      ),
+      false === isRefresh ? this.searchService.getBenefitsLocationLookup().pipe(catchError((err) => {
+        this.bIsLoading = false;
+        this.addService.fnRaiseGenericAlert('getBenefitsLocationLookup', err);
+        return of(null);
+      })) : of(null),
+      this.searchService.getSoloProviderLocationBenefitPlans(this.nProviderId).pipe(catchError((err) => {
+        this.bIsLoading = false;
+        this.addService.fnRaiseGenericAlert('getSoloProviderLocationBenefitPlans', err);
+        return of(null);
+      })),
+      false === isRefresh ? this.searchService.getPracticeLocationDetails(this.nProviderId).pipe(catchError((err) => {
+        this.bIsLoading = false;
+        this.addService.fnRaiseGenericAlert('getPracticeLocationDetails', err);
+        return of(null);
+      })) : of(null),
+      this.searchService.getSoloProviderInactiveLocationBenefitPlans(this.nProviderId).pipe(catchError((err) => {
+        this.bIsLoading = false;
+        this.addService.fnRaiseGenericAlert('getSoloProviderInactiveLocationBenefitPlans', err);
+        return of(null);
+      })),
     ];
 
-    forkJoin([...arrCallsToMake])
-      .pipe(
-        map(([arrLookup, oAlternateIdInfo, oPracticeLocationInfo]) => {
-          if (!!arrLookup) {
-            this.arrLookup = { ...arrLookup[0] };
-          }
-          if (!!oAlternateIdInfo) {
-            this.oAlternateIdsInfo = { ...oAlternateIdInfo };
-          }
-          if (!!oPracticeLocationInfo) {
-            this.oProviderLocation = { ...oPracticeLocationInfo };
-          }
-         
+    this.bIsLoading = true;
 
-          // Linking the billing locations to alternate Id
-          this.oAlternateIdsInfo.providerLocationAlternateIds.forEach(altId=>{
-            this.linkBillingLocsToPracticeLocs(altId);
-          })
+    forkJoin([...arrCallsToMake]).pipe(
+      map(([arrLookups, benefitPlanLocationInfo, oLocations, inactivePlansData]) => {
 
-          this.oProviderLocation.providerLocationInfo?.forEach(
-            (location) => {
-              location.bIsChecked = false;
-              location.isClickable = false;
+        if(!!arrLookups) {
+          this.oLookupInfo = { ...arrLookups[0] };
+          this.arrFilteredBenefitPlans = this.oLookupInfo.benefitPlans;
+        }
+
+        this.oProviderlocationBenefitPlans = { ...benefitPlanLocationInfo };
+        if (!this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan) {
+          this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
+        }
+        if(!!oLocations) {
+          this.oProviderLocation = { ...oLocations };
+          this.arrFilteredLocations = this.oProviderLocation.providerLocationInfo;
+          
+        }
+        this.oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
+        if(inactivePlansData){
+          this.oInactiveProviderlocationBenefitPlans = { ...inactivePlansData };
+        }
+        this.bIsLoading = false;
+      }),
+      catchError(err => {
+        if (!this.oProviderlocationBenefitPlans) {
+          this.oProviderlocationBenefitPlans = {}
+          this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
+        }
+        return throwError(err);
+      })
+    ).subscribe();
+  }
+public fnAddorEditBenefitPlanNew(duplicateInfoDlg: any, overlapInfoDlg: any, nEditIndex: any): void {
+    this.bIsAddOrEditBtnClicked = true;
+    if (false === this.addPlanForm.valid) return;
+
+    let todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+
+    if (this.oCurrentFeeSch.effectiveDate && this.oCurrentFeeSch.expirationDate && new Date(this.oCurrentFeeSch.effectiveDate) > new Date(this.oCurrentFeeSch.expirationDate)) {
+      this.confirmationDialogService
+        .confirm({
+          title: 'Invalid Date',
+          message: 'Expiration date should be greater than Effective date'
+        }).then((bIsConfirmed) => { });
+      return;
+    }
+    const planAt = this.arrLocations.find(location => location.serviceLocationId === this.oCurrentFeeSch.oLocation.serviceLocationId);
+
+   
+
+    // Date Overlaps with expired benifit plans
+    if(this.oInactiveProviderlocationBenefitPlans){
+      for (var location of this.arrLocations) {
+        for (var benefit of this.arrBenefitPlans) {
+          const oExistingPlans = this.oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan
+            ?.filter((planAt, i) => planAt.benefitPlanId === benefit.benefitPlanId
+              && planAt.serviceLocationID === location.serviceLocationId && i !== nEditIndex);
+          if (!!oExistingPlans) {
+            for(let oExistingPlan of oExistingPlans){
+              if (oExistingPlan.participationId === this.oCurrentFeeSch.oNetwork.participationId &&
+                oExistingPlan.effectiveDate.split('T')[0] === this.oCurrentFeeSch.effectiveDate &&
+                (oExistingPlan.expirationDate? (oExistingPlan.expirationDate.split('T')[0] === this.oCurrentFeeSch.expirationDate) : true) &&
+                oExistingPlan.serviceLocationID === location.serviceLocationId &&
+                oExistingPlan.participationCodeId === this.oCurrentFeeSch.oParticipation.participationCodeId) {
+                this.oBsModalSvc.open(duplicateInfoDlg);
+                return;
+              } else if (this.fnAreDatesOverlap(this.bIsEditBtnClicked, oExistingPlan.effectiveDate, oExistingPlan.expirationDate, this.oCurrentFeeSch.effectiveDate, this.oCurrentFeeSch.expirationDate)) {
+                this.oBsModalSvc.open(overlapInfoDlg);
+                return;
+              }
             }
-          );
-          
-          this.bIsLoading = false;
-        })
-      )
-      .subscribe();
-  }
-
- onSubmitAlernateIdForm(dupDialog: any): void {
-    this.formTemplate.triedToSubmit = true;
-    if (this.formData.invalid || this.formTemplate.data.selectedParticipationLocation.length===0) {
-      return;
-    }
-
-    const data = this.formTemplate.data;
-    let flagAltLocAlreadyExists = false;
-    let flagInvalidIdNumber = false;
-
-    const oValidStatus = this.fnCheckForValidValue(data.idType.locationIdTypeId, data.locationAltId);
-    if(false === oValidStatus.bIsValid) {
-      this.confirmationDialogService
-        .alert({ title: 'Invalid Value',
-                   message: oValidStatus.sMsg
-                  }).then((bIsConfirmed) => {});
-        return;
-
-    }
-
-    data.selectedParticipationLocation.forEach((participationLocation) => {
-      const newAltLoc = {
-        locationAlternateXrefId: this.formTemplate.editMode
-          ? this.oAlternateIdsInfo.providerLocationAlternateIds[
-              this.formTemplate.indexOfEdited
-            ].locationAlternateXrefId
-          : 0,
-        providerServiceLocationMapId:
-          participationLocation.providerServiceLocationMapId,
-        serviceLocationId: participationLocation.serviceLocationId,
-        locationIdTypeId: data.idType.locationIdTypeId,
-        locationAltId: data.locationAltId,
-        locationIdTypeDesc: data.idType.locationIdType,
-        effectiveDate: data.effectiveDate + 'T00:00:00',
-        expirationDate: data.expirationDate + 'T00:00:00',
-        userId: participationLocation.userId,
-        state: data.state,
-        locationName: participationLocation.locationName,
-        address1: participationLocation.serviceAddress,
-        address2: participationLocation.address2,
-        city: participationLocation.city,
-        county: participationLocation.county,
-        stateCode: participationLocation.stateCode,
-        zip: participationLocation.zip,
-      };
-
-      const locationAltIdArr = newAltLoc.locationAltId.split('');
-
-      if(newAltLoc.locationIdTypeDesc==='MEDICAID ID' 
-        && locationAltIdArr.length > 1
-        && new Set(locationAltIdArr).size===1 
-        && !isNaN(parseFloat(locationAltIdArr[0]))
-        ){
-        flagInvalidIdNumber = true;
-        return;
-      }
-  
-      this.oAlternateIdsInfo.providerLocationAlternateIds?.forEach(
-        (locAlt, i) => {
-          if (
-            locAlt.locationIdTypeId === newAltLoc.locationIdTypeId &&
-            locAlt.locationIdTypeDesc === newAltLoc.locationIdTypeDesc &&
-            locAlt.locationName === newAltLoc.locationName &&
-            locAlt.locationAltId === newAltLoc.locationAltId &&
-            locAlt.serviceLocationId === newAltLoc.serviceLocationId &&
-            !(this.formTemplate.editMode && i === this.formTemplate.indexOfEdited)
-          ) {
-            flagAltLocAlreadyExists = true;
-            return;
           }
         }
-      );
-    });
-
-    if (flagInvalidIdNumber) {
-      this.confirmationDialogService
-        .confirm({ title: 'Invalid Id Number', 
-                  message: 'ID Number for Id type, "MEDICAID ID" cannot be a single digit repeated'}
-                  ).then((bIsConfirmed) => {
-          
-        });
-        return;
+      }
     }
 
-    if (flagAltLocAlreadyExists) {
-      //open modal to display that an alternate id already exists with same details
-      this.oBsModalSvc.open(dupDialog);
-      return;
-    }
-
-    data.selectedParticipationLocation.forEach((participationLocation) => {
-      const newAltLoc = {
-        locationAlternateXrefId: this.formTemplate.editMode
-          ? this.oAlternateIdsInfo.providerLocationAlternateIds[
-              this.formTemplate.indexOfEdited
-            ].locationAlternateXrefId
-          : 0,
-        providerServiceLocationMapId:
-          participationLocation.providerServiceLocationMapId,
-        serviceLocationId: participationLocation.serviceLocationId,
-        locationIdTypeId: data.idType.locationIdTypeId,
-        locationAltId: data.locationAltId,
-        locationIdTypeDesc: data.idType.locationIdType,
-        effectiveDate: data.effectiveDate + 'T00:00:00',
-        expirationDate: data.expirationDate? data.expirationDate+ 'T00:00:00': null,
-        userId: participationLocation.userId,
-        state: data.state,
-        locationName: participationLocation.locationName,
-        address1: participationLocation.serviceAddress,
-        address2: participationLocation.address2,
-        city: participationLocation.city,
-        county: participationLocation.county,
-        stateCode: participationLocation.stateCode,
-        zip: participationLocation.zip,
-      };
-
-      //linking billing locations to provider location
-      this.linkBillingLocsToPracticeLocs(newAltLoc);
-
-      if (this.formTemplate.editMode) {
-        let index = this.formTemplate.indexOfEdited;
-
-        this.oAlternateIdsInfo.providerLocationAlternateIds[index] = newAltLoc;
-        // this.arrLocationInfo[index] = participationLocation;
-
-        this.formTemplate.editMode = false;
-      } else {
-        if (this.oAlternateIdsInfo.providerLocationAlternateIds) {
-          this.oAlternateIdsInfo.providerLocationAlternateIds.push(newAltLoc);
-        } else {
-          this.oAlternateIdsInfo.providerLocationAlternateIds = [newAltLoc];
+    const tmpBenefitPlans = [];
+    
+    for (var location of this.arrLocations) {
+      for (var benefit of this.arrBenefitPlans) {
+        const oExistingPlans = this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan
+          ?.filter((planAt, i) => planAt.benefitPlanId === benefit.benefitPlanId
+            && planAt.serviceLocationID === location.serviceLocationId && i !== nEditIndex);
+        if (!!oExistingPlans) {
+          for (var oExistingPlan of oExistingPlans) {
+            if (oExistingPlan.participationId === this.oCurrentFeeSch.oNetwork.participationId &&
+              oExistingPlan.effectiveDate.split('T')[0] === this.oCurrentFeeSch.effectiveDate &&
+              (oExistingPlan.expirationDate? (oExistingPlan.expirationDate.split('T')[0] === this.oCurrentFeeSch.expirationDate) : true) &&
+              oExistingPlan.serviceLocationID === location.serviceLocationId &&
+              oExistingPlan.participationCodeId === this.oCurrentFeeSch.oParticipation.participationCodeId) {
+              this.oBsModalSvc.open(duplicateInfoDlg);
+              return;
+            } else if (this.fnAreDatesOverlap(this.bIsEditBtnClicked, oExistingPlan.effectiveDate, oExistingPlan.expirationDate, this.oCurrentFeeSch.effectiveDate, this.oCurrentFeeSch.expirationDate)) {
+              this.oBsModalSvc.open(overlapInfoDlg);
+              return;
+            }
+          }
         }
-        // this.arrLocationInfo.push(participationLocation);
-      }
-    });
-
-    this.formTemplate.showForm = false;
-    this.dataChanged = true;
-    this.formTemplate.triedToSubmit = false;
-    this.formTemplate.indexOfEdited = null;
-
-    this.formData.reset();
-    this.fnResetAltLocationSelect();
-
-  }
-
-private linkBillingLocsToPracticeLocs(pracLoc: any){
-    for(let provLoc of this.oProviderLocation.providerLocationInfo){
-      if(provLoc.serviceLocationId===pracLoc.serviceLocationId){
-        pracLoc.providerLocBillingInfo = [...provLoc.providerLocBillingInfo];
-        break;
+        if (!this.bIsEditBtnClicked) {
+          let oNewBenefitPlan = {
+            benefitPlanProviderId: benefit.benefitPlanProviderId,
+            benefitPlanId: benefit.benefitPlanId,
+            benefitPlanName: benefit.benefitPlanName,
+            effectiveDate: this.oCurrentFeeSch.effectiveDate,
+            expirationDate: this.oCurrentFeeSch.expirationDate?this.oCurrentFeeSch.expirationDate:null,
+            network: this.oCurrentFeeSch.oNetwork.network,
+            participationId: this.oCurrentFeeSch.oNetwork.participationId,
+            participationCodeId: this.oCurrentFeeSch.oParticipation.participationCodeId,
+            serviceLocationID: location.serviceLocationId,
+            providerServiceLocationMapId: location.providerServiceLocationMapId,
+            city: location.city,
+            stateCode: location.stateCode,
+            siteName: location.locationName,
+            zip: location.zip,
+            taxId: location.taxId,
+            address1: location.serviceAddress,
+            //isNew:true
+          
+          };
+          tmpBenefitPlans.push({...oNewBenefitPlan});
+          
+        }
       }
     }
+    if(tmpBenefitPlans.length > 0) {
+      this.fnSaveBefPlan(tmpBenefitPlans);
+    }
+    
+    if (-1 !== this.nEditIndex) {
+      let oEditBenefitPlan = {
+        benefitPlanId: this.arrBenefitPlans.length > 0 ? this.arrBenefitPlans[0].benefitPlanId : this.oCurrentFeeSch.oBenefitPlan.benefitPlanId,
+        benefitPlanName: this.arrBenefitPlans.length > 0 ? this.arrBenefitPlans[0].benefitPlanName : this.oCurrentFeeSch.oBenefitPlan.benefitPlanName,
+        effectiveDate: this.oCurrentFeeSch.effectiveDate,
+        expirationDate: this.oCurrentFeeSch.expirationDate?this.oCurrentFeeSch.expirationDate:null,
+        network: this.oCurrentFeeSch.oNetwork.network,
+        participationId: this.oCurrentFeeSch.oNetwork.participationId,
+        participationCodeId: this.oCurrentFeeSch.oParticipation.participationCodeId,
+        serviceLocationID: this.arrLocations.length > 0 ? this.arrLocations[0].serviceLocationId : this.oCurrentFeeSch.oLocation.serviceLocationId,
+        providerServiceLocationMapId: this.arrLocations.length > 0 ? this.arrLocations[0].providerServiceLocationMapId : this.oCurrentFeeSch.oLocation.providerServiceLocationMapId,
+        city: this.arrLocations.length > 0 ? this.arrLocations[0].city : this.oCurrentFeeSch.oLocation.city,
+        stateCode: this.arrLocations.length > 0 ? this.arrLocations[0].stateCode : this.oCurrentFeeSch.oLocation.stateCode,
+        siteName: this.arrLocations.length > 0 ? this.arrLocations[0].locationName : this.oCurrentFeeSch.oLocation.locationName,
+        zip: this.arrLocations.length > 0 ? this.arrLocations[0].zip : this.oCurrentFeeSch.oLocation.zip,
+        taxId: this.arrLocations.length > 0 ? this.arrLocations[0].taxId : this.oCurrentFeeSch.oLocation.taxId,
+        //isNew:true
+      };
+      const oExistingBefPlan = this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan[this.nEditIndex];
+      Object.assign(oExistingBefPlan, oEditBenefitPlan);
+      tmpBenefitPlans.push({...oExistingBefPlan});
+      this.fnSaveBefPlan(tmpBenefitPlans);
+    }
+    this.fnResetForm();
   }
+
