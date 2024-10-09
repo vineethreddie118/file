@@ -1,11 +1,279 @@
-const selectedLocation = this.arrLocations.find(location => location.serviceLocationId === this.oCurrentFeeSch.oLocation.serviceLocationId);
+	<table class="table table-bordered">
+				<thead>
+					<th class="check text-center">Action</th>
+					<th>ID Type</th>
+					<th>ID Number</th>
+					<th>State</th>
+					<th>Effective Date</th>
+					<th>Expiration Date</th>
+					<th>Practice Location</th>
+					<th>Billing Location</th>
+				</thead>
+				<tbody>
+					<ng-container *ngFor="let alternateIdAtInfo of oAlternateIdsInfo.providerLocationAlternateIds; let i=index"
+					>
+						<tr *ngFor="let billingInfo of alternateIdAtInfo.providerLocBillingInfo">
 
-    if (selectedLocation && selectedLocation.providerBillingInfo) {
-        this.oCurrentFeeSch.billingAddress1 = selectedLocation.providerBillingInfo.billingAddress1 || '';
-        this.oCurrentFeeSch.billingAddress2 = selectedLocation.providerBillingInfo.billingAddress2 || '';
-        this.oCurrentFeeSch.billingCity = selectedLocation.providerBillingInfo.billingCity || '';
-        this.oCurrentFeeSch.billingStateCode = selectedLocation.providerBillingInfo.billingStateCode || '';
-        this.oCurrentFeeSch.billingZip = selectedLocation.providerBillingInfo.billingZip || '';
-        this.oCurrentFeeSch.billingCounty = selectedLocation.providerBillingInfo.billingCounty || '';
-        this.oCurrentFeeSch.payeeName = selectedLocation.providerBillingInfo.payeeName || '';
+							<td class="text-center">
+								<div class="d-flex flex-sm-row flex-column justify-content-center">
+									<i class="fa-solid fa-pen-to-square btn btn-primaryicon btn-sm mb-sm-0 mb-2"
+										style="margin-right: 0.25rem;"
+										[ngClass]="{'disableDiv' : (oProviderLocation.providerLocationInfo==undefined) || (oProviderLocation.providerLocationInfo?.length==0)}"
+										data-toggle="tooltip" title="Edit Alternate ID" (click)="editAlternateId(i)"></i>
+									<i class="fa-solid fa-trash-alt btn btn-primaryicon btn-sm"
+										data-toggle="tooltip"
+										title="Delete"
+										[ngClass]="{'disableDiv' : formTemplate.editMode}"
+										(click)="delteAlternateId(i)"></i>
+								</div>
+							</td>
+							<td>{{alternateIdAtInfo.locationIdTypeDesc}}</td>
+							<td>{{alternateIdAtInfo.locationAltId}}</td>
+							<td>{{alternateIdAtInfo.state}}</td>
+							<td>{{alternateIdAtInfo.effectiveDate | date: 'yyyy-MM-dd'}}</td>
+							<td>{{alternateIdAtInfo.expirationDate | date: 'yyyy-MM-dd'}}</td>
+							<td>
+								<div style="display: flex; flex-direction: column;">
+									<div>Site Name: {{alternateIdAtInfo.locationName}}</div>
+									<div *ngIf="alternateIdAtInfo.address1">{{alternateIdAtInfo.address1}}</div>
+									<div *ngIf="alternateIdAtInfo.address2">{{alternateIdAtInfo.address2}}</div>
+									<div>
+										{{alternateIdAtInfo.city}}, {{alternateIdAtInfo.county}},{{alternateIdAtInfo.stateCode}},
+										{{alternateIdAtInfo.zip}}
+									</div>
+								</div>
+							</td>
+							<td>
+								<div style="display: flex; flex-direction: column;">
+									<div>Payee Name: {{billingInfo.payeeName}}</div>
+									<div *ngIf="billingInfo.billingAddress1">{{billingInfo.billingAddress1}}</div>
+									<div *ngIf="billingInfo.billingAddress2">{{billingInfo.billingAddress2}}</div>
+									<div>
+										{{billingInfo.billingCity}}, {{billingInfo.billingCounty}},{{billingInfo.billingStateCode}},
+										{{billingInfo.billingZip}}
+									</div>
+								</div>
+							</td>
+						</tr>
+					</ng-container>
+				</tbody>
+
+ private fnFetchData(): void {
+    this.bIsLoading = true;
+
+    let arrCallsToMake = [
+      this.searchService.getProviderLocationAlternateIdLookup().pipe(
+        catchError((err) => {
+          this.bIsLoading = false;
+          this.addService.fnRaiseGenericAlert(
+            'getProviderLocationAlternateIdLookup'
+          );
+          return of(null);
+        })
+      ),
+      this.searchService
+        .getSoloProviderLocationAlternateId(this.nProviderId)
+        .pipe(
+          catchError((err) => {
+            this.bIsLoading = false;
+            this.addService.fnRaiseGenericAlert(
+              'getSoloProviderLocationAlternateId'
+            );
+            return of(null);
+          })
+        ),
+      this.searchService.getPracticeLocationDetails(this.nProviderId).pipe(
+        catchError((err) => {
+          this.bIsLoading = false;
+          this.addService.fnRaiseGenericAlert('getPracticeLocationDetails');
+          return of(null);
+        })
+      ),
+    ];
+
+    forkJoin([...arrCallsToMake])
+      .pipe(
+        map(([arrLookup, oAlternateIdInfo, oPracticeLocationInfo]) => {
+          if (!!arrLookup) {
+            this.arrLookup = { ...arrLookup[0] };
+          }
+          if (!!oAlternateIdInfo) {
+            this.oAlternateIdsInfo = { ...oAlternateIdInfo };
+          }
+          if (!!oPracticeLocationInfo) {
+            this.oProviderLocation = { ...oPracticeLocationInfo };
+          }
+         
+
+          // Linking the billing locations to alternate Id
+          this.oAlternateIdsInfo.providerLocationAlternateIds.forEach(altId=>{
+            this.linkBillingLocsToPracticeLocs(altId);
+          })
+
+          this.oProviderLocation.providerLocationInfo?.forEach(
+            (location) => {
+              location.bIsChecked = false;
+              location.isClickable = false;
+            }
+          );
+          
+          this.bIsLoading = false;
+        })
+      )
+      .subscribe();
+  }
+
+ onSubmitAlernateIdForm(dupDialog: any): void {
+    this.formTemplate.triedToSubmit = true;
+    if (this.formData.invalid || this.formTemplate.data.selectedParticipationLocation.length===0) {
+      return;
     }
+
+    const data = this.formTemplate.data;
+    let flagAltLocAlreadyExists = false;
+    let flagInvalidIdNumber = false;
+
+    const oValidStatus = this.fnCheckForValidValue(data.idType.locationIdTypeId, data.locationAltId);
+    if(false === oValidStatus.bIsValid) {
+      this.confirmationDialogService
+        .alert({ title: 'Invalid Value',
+                   message: oValidStatus.sMsg
+                  }).then((bIsConfirmed) => {});
+        return;
+
+    }
+
+    data.selectedParticipationLocation.forEach((participationLocation) => {
+      const newAltLoc = {
+        locationAlternateXrefId: this.formTemplate.editMode
+          ? this.oAlternateIdsInfo.providerLocationAlternateIds[
+              this.formTemplate.indexOfEdited
+            ].locationAlternateXrefId
+          : 0,
+        providerServiceLocationMapId:
+          participationLocation.providerServiceLocationMapId,
+        serviceLocationId: participationLocation.serviceLocationId,
+        locationIdTypeId: data.idType.locationIdTypeId,
+        locationAltId: data.locationAltId,
+        locationIdTypeDesc: data.idType.locationIdType,
+        effectiveDate: data.effectiveDate + 'T00:00:00',
+        expirationDate: data.expirationDate + 'T00:00:00',
+        userId: participationLocation.userId,
+        state: data.state,
+        locationName: participationLocation.locationName,
+        address1: participationLocation.serviceAddress,
+        address2: participationLocation.address2,
+        city: participationLocation.city,
+        county: participationLocation.county,
+        stateCode: participationLocation.stateCode,
+        zip: participationLocation.zip,
+      };
+
+      const locationAltIdArr = newAltLoc.locationAltId.split('');
+
+      if(newAltLoc.locationIdTypeDesc==='MEDICAID ID' 
+        && locationAltIdArr.length > 1
+        && new Set(locationAltIdArr).size===1 
+        && !isNaN(parseFloat(locationAltIdArr[0]))
+        ){
+        flagInvalidIdNumber = true;
+        return;
+      }
+  
+      this.oAlternateIdsInfo.providerLocationAlternateIds?.forEach(
+        (locAlt, i) => {
+          if (
+            locAlt.locationIdTypeId === newAltLoc.locationIdTypeId &&
+            locAlt.locationIdTypeDesc === newAltLoc.locationIdTypeDesc &&
+            locAlt.locationName === newAltLoc.locationName &&
+            locAlt.locationAltId === newAltLoc.locationAltId &&
+            locAlt.serviceLocationId === newAltLoc.serviceLocationId &&
+            !(this.formTemplate.editMode && i === this.formTemplate.indexOfEdited)
+          ) {
+            flagAltLocAlreadyExists = true;
+            return;
+          }
+        }
+      );
+    });
+
+    if (flagInvalidIdNumber) {
+      this.confirmationDialogService
+        .confirm({ title: 'Invalid Id Number', 
+                  message: 'ID Number for Id type, "MEDICAID ID" cannot be a single digit repeated'}
+                  ).then((bIsConfirmed) => {
+          
+        });
+        return;
+    }
+
+    if (flagAltLocAlreadyExists) {
+      //open modal to display that an alternate id already exists with same details
+      this.oBsModalSvc.open(dupDialog);
+      return;
+    }
+
+    data.selectedParticipationLocation.forEach((participationLocation) => {
+      const newAltLoc = {
+        locationAlternateXrefId: this.formTemplate.editMode
+          ? this.oAlternateIdsInfo.providerLocationAlternateIds[
+              this.formTemplate.indexOfEdited
+            ].locationAlternateXrefId
+          : 0,
+        providerServiceLocationMapId:
+          participationLocation.providerServiceLocationMapId,
+        serviceLocationId: participationLocation.serviceLocationId,
+        locationIdTypeId: data.idType.locationIdTypeId,
+        locationAltId: data.locationAltId,
+        locationIdTypeDesc: data.idType.locationIdType,
+        effectiveDate: data.effectiveDate + 'T00:00:00',
+        expirationDate: data.expirationDate? data.expirationDate+ 'T00:00:00': null,
+        userId: participationLocation.userId,
+        state: data.state,
+        locationName: participationLocation.locationName,
+        address1: participationLocation.serviceAddress,
+        address2: participationLocation.address2,
+        city: participationLocation.city,
+        county: participationLocation.county,
+        stateCode: participationLocation.stateCode,
+        zip: participationLocation.zip,
+      };
+
+      //linking billing locations to provider location
+      this.linkBillingLocsToPracticeLocs(newAltLoc);
+
+      if (this.formTemplate.editMode) {
+        let index = this.formTemplate.indexOfEdited;
+
+        this.oAlternateIdsInfo.providerLocationAlternateIds[index] = newAltLoc;
+        // this.arrLocationInfo[index] = participationLocation;
+
+        this.formTemplate.editMode = false;
+      } else {
+        if (this.oAlternateIdsInfo.providerLocationAlternateIds) {
+          this.oAlternateIdsInfo.providerLocationAlternateIds.push(newAltLoc);
+        } else {
+          this.oAlternateIdsInfo.providerLocationAlternateIds = [newAltLoc];
+        }
+        // this.arrLocationInfo.push(participationLocation);
+      }
+    });
+
+    this.formTemplate.showForm = false;
+    this.dataChanged = true;
+    this.formTemplate.triedToSubmit = false;
+    this.formTemplate.indexOfEdited = null;
+
+    this.formData.reset();
+    this.fnResetAltLocationSelect();
+
+  }
+
+private linkBillingLocsToPracticeLocs(pracLoc: any){
+    for(let provLoc of this.oProviderLocation.providerLocationInfo){
+      if(provLoc.serviceLocationId===pracLoc.serviceLocationId){
+        pracLoc.providerLocBillingInfo = [...provLoc.providerLocBillingInfo];
+        break;
+      }
+    }
+  }
