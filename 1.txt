@@ -1,49 +1,107 @@
-    const allDays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]; // Define all possible days
-    this.oCurrentProviderLocationInfo.providerSvcLocHours = this.oCurrentProviderLocationInfo.providerSvcLocHours || []; // Initialize providerSvcLocHours if it's not an array
+<table class="table table-bordered">
+				<thead>
+					<th class="check text-center">Action</th>
+					<th>ID Type</th>
+					<th>ID Number</th>
+					<th>State</th>
+					<th>Effective Date</th>
+					<th>Expiration Date</th>
+					<th>Practice Location</th>
+					<th>Billing Location</th>
+				</thead>
+				<tbody>
+					<ng-container *ngFor="let alternateIdAtInfo of oAlternateIdsInfo.providerLocationAlternateIds; let i=index"
+					>
+						<tr *ngFor="let billingInfo of alternateIdAtInfo.providerLocBillingInfo">
 
-    const existingDays = this.oCurrentProviderLocationInfo.providerSvcLocHours.map(hour => hour.dayOfWeek); // Find out which days are missing
-    const missingDays = allDays.filter(day => !existingDays.includes(day));
+							<td class="text-center">
+								<div class="d-flex flex-sm-row flex-column justify-content-center">
+									<i class="fa-solid fa-pen-to-square btn btn-primaryicon btn-sm mb-sm-0 mb-2"
+										style="margin-right: 0.25rem;"
+										[ngClass]="{'disableDiv' : (oProviderLocation.providerLocationInfo==undefined) || (oProviderLocation.providerLocationInfo?.length==0)}"
+										data-toggle="tooltip" title="Edit Alternate ID" (click)="editAlternateId(i)"></i>
+									<i class="fa-solid fa-trash-alt btn btn-primaryicon btn-sm"
+										data-toggle="tooltip"
+										title="Delete"
+										[ngClass]="{'disableDiv' : formTemplate.editMode}"
+										(click)="delteAlternateId(i)"></i>
+								</div>
+							</td>
+							<td>{{alternateIdAtInfo.locationIdTypeDesc}}</td>
+							<td>{{alternateIdAtInfo.locationAltId}}</td>
+							<td>{{alternateIdAtInfo.state}}</td>
+							<td>{{alternateIdAtInfo.effectiveDate | date: 'yyyy-MM-dd'}}</td>
+							<td>{{alternateIdAtInfo.expirationDate | date: 'yyyy-MM-dd'}}</td>
+							<td>
+								<div style="display: flex; flex-direction: column;">
+									<div>Site Name: {{alternateIdAtInfo.locationName}}</div>
+									<div *ngIf="alternateIdAtInfo.address1">{{alternateIdAtInfo.address1}}</div>
+									<div *ngIf="alternateIdAtInfo.address2">{{alternateIdAtInfo.address2}}</div>
+									<div>
+										{{alternateIdAtInfo.city}}, {{alternateIdAtInfo.county}},{{alternateIdAtInfo.stateCode}},
+										{{alternateIdAtInfo.zip}}
+									</div>
+								</div>
+							</td>
+							<td>
+								<div style="display: flex; flex-direction: column;">
+									<div>Payee Name: {{billingInfo.payeeName}}</div>
+									<div *ngIf="billingInfo.billingAddress1">{{billingInfo.billingAddress1}}</div>
+									<div *ngIf="billingInfo.billingAddress2">{{billingInfo.billingAddress2}}</div>
+									<div>
+										{{billingInfo.billingCity}}, {{billingInfo.billingCounty}},{{billingInfo.billingStateCode}},
+										{{billingInfo.billingZip}}
+									</div>
+								</div>
+							</td>
+						</tr>
+					</ng-container>
+				</tbody>
+			</table>
 
-    // Add default hours for missing days
-    missingDays.forEach(missingDay => {
-        this.oCurrentProviderLocationInfo.providerSvcLocHours.push(this.getDefaultHour(missingDay));
-    });
+in the above code i added billing info in the table in the same way  i want to add in the below table also
 
-    // Sort providerSvcLocHours by day of the week
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.sort((a, b) => {
-        return allDays.indexOf(a.dayOfWeek) - allDays.indexOf(b.dayOfWeek);
-    });
+<table class="table table-bordered">
+        <thead>
+          <th class="check text-center">Action</th>
+          <th>Plan</th>
+          <!-- <th>State</th> -->
+          <th>Network</th>
+          <!-- <th>Benefit Type</th> -->
+          <th>Effective Date</th>
+          <th>Expiration Date</th>
+          <th>Participation</th>
+          <th>Foreign Network Flag</th>
+          <th>Location</th>
+          
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let planAt of oProviderlocationBenefitPlans.serviceLocationBenefitPlan; let i=index">
+            <tr *ngIf="true !== planAt?.isDelete">
+              <td class="text-center">
+                <div class="d-flex flex-sm-row flex-column justify-content-center">
+                  <i class="fa-solid fa-pen-to-square btn btn-primaryicon btn-sm mb-sm-0 mb-2"
+                    style="margin-right: 0.25rem;" data-toggle="tooltip" title="Edit Benefit Plan"
+                    (click)=" openForm(); fnEditBenefitPlan(planAt, i);"></i>
+                  <i class="fa-solid fa-trash-alt btn btn-primaryicon btn-sm" data-toggle="tooltip" title="Delete"
+                    (click)="fnDeleteBenefitPlan(modalDeleteBenefitPlanConfirmation, planAt)"></i>
+                </div>
+              </td>
+              <td>{{planAt.benefitPlanName}}</td>
+              <td>{{planAt.network}}</td>
+              <td>{{planAt.effectiveDate | date: 'yyyy-MM-dd'}}</td>
+              <td>{{planAt.expirationDate | date: 'yyyy-MM-dd'}}</td>
+              <td>{{oLookupInfo.participanCodes[planAt.participationCodeId-1].description}}</td>
+              <td>{{planAt.foreignNetworkFlag}}</td>
+              <td>
+                <div style="display:flex; flex-direction: column;">
+                  <div>{{planAt.siteName}}</div>
+                  <div>({{planAt.address1}}{{planAt?.address2 ? ' ' + planAt?.address2 : ''}},
+                    {{planAt.city}},{{planAt.county ? planAt.county : ''}} {{planAt.stateCode}}, {{planAt.zip}})</div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
 
-    // Convert existing times to 12-hour format with AM/PM for display
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(hour => {
-        if (hour.openTimeValue) {
-            hour.openTimeValue = this.convertTo12HourFormat(hour.openTimeValue);
-        }
-        if (hour.closeTimeValue) {
-            hour.closeTimeValue = this.convertTo12HourFormat(hour.closeTimeValue);
-        }
-    });
-
-    // Hide the add symbol for all entries initially
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => svcHour.showAddSymbol = false);
-
-    // Track the first entry of each day
-    let seenDays = {};
-
-    // Set `showAddSymbol` to true only for the first entry of each day
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => {
-        if (!seenDays[svcHour.dayOfWeek]) {
-            svcHour.showAddSymbol = true;     // Show the add symbol
-            seenDays[svcHour.dayOfWeek] = true;
-        }
-    });
-}
-
-// Helper function to convert 24-hour format to 12-hour format with AM/PM
-private convertTo12HourFormat(time24h: string): string {
-    const [hours, minutes] = time24h.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const hours12 = hours % 12 || 12; // Convert 0 or 12 to 12 for 12-hour clock
-
-    return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
-}
+        </tbody>
+      </table>
