@@ -1,58 +1,9 @@
-
-  private fnFetchData(isRefresh: boolean = false): void {
-    let arrCallsToMake = [
-      false === isRefresh ? this.searchService.getBenefitsLocationLookup().pipe(catchError((err) => {
-        this.bIsLoading = false;
-        this.addService.fnRaiseGenericAlert('getBenefitsLocationLookup', err);
-        return of(null);
-      })) : of(null),
-      this.searchService.getSoloProviderLocationBenefitPlans(this.nProviderId).pipe(catchError((err) => {
-        this.bIsLoading = false;
-        this.addService.fnRaiseGenericAlert('getSoloProviderLocationBenefitPlans', err);
-        return of(null);
-      })),
-      false === isRefresh ? this.searchService.getPracticeLocationDetails(this.nProviderId).pipe(catchError((err) => {
-        this.bIsLoading = false;
-        this.addService.fnRaiseGenericAlert('getPracticeLocationDetails', err);
-        return of(null);
-      })) : of(null),
-      this.searchService.getSoloProviderInactiveLocationBenefitPlans(this.nProviderId).pipe(catchError((err) => {
-        this.bIsLoading = false;
-        this.addService.fnRaiseGenericAlert('getSoloProviderInactiveLocationBenefitPlans', err);
-        return of(null);
-      })),
-    ];
-
-    this.bIsLoading = true;
-
-    forkJoin([...arrCallsToMake]).pipe(
-      map(([arrLookups, benefitPlanLocationInfo, oLocations, inactivePlansData]) => {
-
-        if(!!arrLookups) {
-          this.oLookupInfo = { ...arrLookups[0] };
-          this.arrFilteredBenefitPlans = this.oLookupInfo.benefitPlans;
+if (this.arrFilteredLocations) {
+          this.arrFilteredLocations = this.arrFilteredLocations.map(location => {
+            return {
+              ...location,
+              providerBillingInfo: location.providerBillingInfo || [] // Assuming providerBillingInfo is an array or object
+            };
+          });
         }
-
-        this.oProviderlocationBenefitPlans = { ...benefitPlanLocationInfo };
-        if (!this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan) {
-          this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
-        }
-        if(!!oLocations) {
-          this.oProviderLocation = { ...oLocations };
-          this.arrFilteredLocations = this.oProviderLocation.providerLocationInfo;
-        }
-        this.oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
-        if(inactivePlansData){
-          this.oInactiveProviderlocationBenefitPlans = { ...inactivePlansData };
-        }
-        this.bIsLoading = false;
-      }),
-      catchError(err => {
-        if (!this.oProviderlocationBenefitPlans) {
-          this.oProviderlocationBenefitPlans = {}
-          this.oProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
-        }
-        return throwError(err);
-      })
-    ).subscribe();
-  }
+      }
