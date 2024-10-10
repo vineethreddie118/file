@@ -1,75 +1,71 @@
 public fnSetInactiveBefPlansVisibility(bIsVisible: boolean): void {
     this.bShowInactivePlans = bIsVisible;
 
-    if (false === bIsVisible) {
-      this.addService.scrollToTarget(this.planlistElem);
+    if (!bIsVisible) {
+        this.addService.scrollToTarget(this.planlistElem);
     } else {
-      this.bIsLoading = true;
-      this.searchService.getSoloProviderInactiveLocationBenefitPlans(this.nProviderId).subscribe((data) => {
-        this.oInactiveProviderlocationBenefitPlans = { ...data };
-        if (!this.oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan) {
-          this.oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
-         
-        }
-        this.bIsLoading = false;
-        setTimeout(() => {
-          this.addService.scrollToTarget(this.inactivePlanlistElem);
-        }, 0);
-      })
+        this.bIsLoading = true;
+        this.searchService.getSoloProviderInactiveLocationBenefitPlans(this.nProviderId).subscribe((data) => {
+            this.oInactiveProviderlocationBenefitPlans = { ...data };
+            if (!this.oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan) {
+                this.oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan = [];
+            }
+
+            // Ensure benefitPlanBillingInfo is populated for each plan
+            this.oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan.forEach(plan => {
+                if (!plan.benefitPlanBillingInfo) {
+                    plan.benefitPlanBillingInfo = [];
+                }
+            });
+
+            this.bIsLoading = false;
+            setTimeout(() => {
+                this.addService.scrollToTarget(this.inactivePlanlistElem);
+            }, 0);
+        });
     }
+}
 
-  }
-
-<div class="col-12" #inactivePlans *ngIf="bShowInactivePlans">
-      <h3 class="font-weight-bold pl-0">
-        <div class="d-flex align-items-center">
-          Expired Benefit Plans
-          <div class="d-flex align-items-center ml-auto">
-            <button class="btn btn-link btn-sm ml-auto" style="line-height: 1;"
-              (click)="fnSetInactiveBefPlansVisibility(false)">Hide Expired Benefit Plans</button>
-          </div>
-        </div>
-      </h3>
-      <table class="table table-bordered">
-        <thead>
-          <th>Plan</th>
-          <!-- <th>State</th> -->
-          <th>Network</th>
-          <!-- <th>Benefit Type</th> -->
-          <th>Effective Date</th>
-          <th>Expiration Date</th>
-          <th>Participation</th>
-          <th>Foreign Network Flag</th>
-          <th>Location</th>
-        </thead>
-        <tbody>
-          <tr *ngFor="let planAt of oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan; let i=index">
-            <!-- <td class="text-center">
-              <div class="d-flex flex-sm-row flex-column justify-content-center">
-                <i class="fa-solid fa-pen-to-square btn btn-primaryicon btn-sm mb-sm-0 mb-2"
-                   style="margin-right: 0.25rem;"
-                   data-toggle="tooltip" title="Edit Benefit Plan" (click)=" openForm(); fnEditBenefitPlan(planAt, i);"></i>
-                <i class="fa-solid fa-trash-alt btn btn-primaryicon btn-sm" data-toggle="tooltip" title="Delete" (click)="fnDeleteBenefitPlan(modalDeleteBenefitPlanConfirmation, planAt)"></i>
-              </div>
-            </td> -->
-            <td>{{planAt.benefitPlanName}}</td>
-            <!-- <td>{{planAt.stateCode}}</td> -->
-            <!-- <td>{{planAt.benefitTypeID}}</td> -->
-            <td>{{planAt.network}}</td>
-            <td>{{planAt.effectiveDate | date: 'yyyy-MM-dd'}}</td>
-            <td>{{planAt.expirationDate | date: 'yyyy-MM-dd'}}</td>
-            <td>{{oLookupInfo.participanCodes[planAt.participationCodeId-1].description}}</td>
-            <td>{{planAt.foreignNetworkFlag}}</td>
-            <td>
-              <div style="display:flex; flex-direction: column;">
-                <div>{{planAt.siteName}}</div>
-
-                <div>({{planAt.address1}}{{planAt?.address2 ? ' ' + planAt?.address2 : ''}},
-                  {{planAt.city}},{{planAt.county ? planAt.county : ''}} {{planAt.stateCode}}, {{planAt.zip}})</div>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-    </div>
+<table class="table table-bordered">
+    <thead>
+        <th>Plan</th>
+        <th>Network</th>
+        <th>Effective Date</th>
+        <th>Expiration Date</th>
+        <th>Participation</th>
+        <th>Foreign Network Flag</th>
+        <th>Service Location</th>
+        <th>Billing Location</th> <!-- New Column for Billing Location -->
+    </thead>
+    <tbody>
+        <ng-container *ngFor="let planAt of oInactiveProviderlocationBenefitPlans.serviceLocationBenefitPlan; let i=index">
+            <ng-container *ngFor="let billing of planAt.benefitPlanBillingInfo">
+                <tr *ngIf="true !== planAt?.isDelete">
+                    <td>{{planAt.benefitPlanName}}</td>
+                    <td>{{planAt.network}}</td>
+                    <td>{{planAt.effectiveDate | date: 'yyyy-MM-dd'}}</td>
+                    <td>{{planAt.expirationDate | date: 'yyyy-MM-dd'}}</td>
+                    <td>{{oLookupInfo.participanCodes[planAt.participationCodeId-1].description}}</td>
+                    <td>{{planAt.foreignNetworkFlag}}</td>
+                    <td>
+                        <div style="display:flex; flex-direction: column;">
+                            <div>{{planAt.siteName}}</div>
+                            <div>({{planAt.address1}}{{planAt?.address2 ? ' ' + planAt?.address2 : ''}},
+                                {{planAt.city}},{{planAt.county ? planAt.county : ''}} {{planAt.stateCode}}, {{planAt.zip}})
+                            </div>
+                        </div>
+                    </td>
+                    <!-- Billing Location Column -->
+                    <td>
+                        <div style="display:flex; flex-direction: column;" >
+                            <div>Payee Name: {{billing.payeeName}}</div>
+                            <div *ngIf="billing.billingAddress1">{{billing.billingAddress1}}</div>
+                            <div *ngIf="billing.billingAddress2">{{billing.billingAddress2}}</div>
+                            <div>{{billing.billingCity}}, {{billing.billingCounty}}, {{billing.billingStateCode}}, {{billing.billingZip}}</div>
+                        </div>
+                    </td>
+                </tr>
+            </ng-container>
+        </ng-container>
+    </tbody>
+</table>
