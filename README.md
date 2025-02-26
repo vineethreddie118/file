@@ -2,8 +2,9 @@
     <label for="effectiveDate">Effective Date</label>
     <div class="input-group">
         <input type="text" class="form-control form-control-custom" id="effectiveDate" name="effectiveDate"
-            placeholder="{{ providerForm.providerAlternateIDSection[0].providerNpi[0].effectiveDate | date: 'MM/dd/yyyy' }}"
-            [(ngModel)]="providerForm.providerAlternateIDSection[0].providerNpi[0].effectiveDate">
+            placeholder="{{ providerForm.providerAlternateIDSection[0].providerNpi[0].effectiveDate ? (providerForm.providerAlternateIDSection[0].providerNpi[0].effectiveDate | date: 'MM/dd/yyyy') : 'MM/DD/YYYY' }}"
+            [ngModel]="providerForm.providerAlternateIDSection[0].providerNpi[0].effectiveDate ? (providerForm.providerAlternateIDSection[0].providerNpi[0].effectiveDate | date: 'MM/dd/yyyy') : ''"
+            (ngModelChange)="providerForm.providerAlternateIDSection[0].providerNpi[0].effectiveDate = $event">
         <div class="input-group-append">
             <span class="input-group-text cursor-pointer" (click)="effectiveDatePicker.showPicker()">
                 <i class="fa fa-calendar"></i>
