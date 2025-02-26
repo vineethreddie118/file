@@ -1,12 +1,11 @@
-  <div class="col-md-6 col-lg-4 col-xl-3 position-relative">
+<div class="col-md-6 col-lg-4 col-xl-3 position-relative">
     <label for="effectiveDate">Effective Date</label>
     <div class="input-group">
         <input type="text" class="form-control form-control-custom" id="effectiveDate" name="effectiveDate"
-            placeholder="MM/DD/YYYY"
-            [ngModel]="providerForm.providerAlternateIDSection[0].providerNpi[0].effectiveDate | date: 'MM/dd/yyyy'" 
-            (ngModelChange)="providerForm.providerAlternateIDSection[0].providerNpi[0].effectiveDate = $event">
+            placeholder="{{ providerForm.providerAlternateIDSection[0].providerNpi[0].effectiveDate | date: 'MM/dd/yyyy' }}"
+            [(ngModel)]="providerForm.providerAlternateIDSection[0].providerNpi[0].effectiveDate">
         <div class="input-group-append">
-            <span class="input-group-text cursor-pointer" (click)="effectiveDatePicker.click()">
+            <span class="input-group-text cursor-pointer" (click)="effectiveDatePicker.showPicker()">
                 <i class="fa fa-calendar"></i>
             </span>
         </div>
