@@ -1,196 +1,214 @@
- public fnEditLocation(nIndex: number): void {
-    if(this.isBillingEditMode || this.isEditMode || this.isReplaceMode || this.isReplaceBillingMode||this.serviceLocations && this.serviceLocations.length>0){
-      this.addService.fnRaiseWarningDlg("Invalid","Edit changes should be saved or discarded");
+ fnupdateLocationDetails() {
+    if((this.isEditMode && this.iseditaddmode && !this.isbillingaddressclicked)){
+      this.addService.fnRaiseWarningDlg("Missing Billing Details" ," Please click Add button in Billing section ");
       return;
     }
-  
-    this.oCurrentProviderLocationInfo = JSON.parse(JSON.stringify({ ...this.oProviderLocation.providerLocationInfo[nIndex] }));
-
-    // this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].effectiveDate = new Date(this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].effectiveDate)
-
-    this.isReplaceBillingMode = false;
-
-    this.isPracticeLocationAccordionOpen = true;
-
-    const allDays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]; // Define all possible days
-    this.oCurrentProviderLocationInfo.providerSvcLocHours = this.oCurrentProviderLocationInfo.providerSvcLocHours || []; // Initialize providerSvcLocHours if it's not an array
-
-    const existingDays = this.oCurrentProviderLocationInfo.providerSvcLocHours.map(hour => hour.dayOfWeek); // Find out which days are missing
-    const missingDays = allDays.filter(day => !existingDays.includes(day));
-
-    // Add default hours for missing days
-    missingDays.forEach(missingDay => {
-        this.oCurrentProviderLocationInfo.providerSvcLocHours.push(this.getDefaultHour(missingDay));
-    });
-
-    // Sort providerSvcLocHours by day of the week
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.sort((a, b) => {
-        return allDays.indexOf(a.dayOfWeek) - allDays.indexOf(b.dayOfWeek);
-    });
-
-    // Convert existing times to 12-hour format with AM/PM for display
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(hour => {
-        if (hour.openTimeValue) {
-            hour.openTimeValue = this.convertTo12HourFormat(hour.openTimeValue);
-        }
-        if (hour.closeTimeValue) {
-            hour.closeTimeValue = this.convertTo12HourFormat(hour.closeTimeValue);
-        }
-    });
-
-    // Hide the add symbol for all entries initially
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => svcHour.showAddSymbol = false);
-
-    // Track the first entry of each day
-    
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.sort((a, b) => {
-      const dayOrder = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-  
-      // Sort by day of the week first
-      const dayDifference = dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek);
-      if (dayDifference !== 0) return dayDifference;
-  
-      // If same day, sort by openTimeValue
-      const openTimeA = this.convertTo24HourFormat(a.openTimeValue);
-      const openTimeB = this.convertTo24HourFormat(b.openTimeValue);
-  
-      return openTimeA.localeCompare(openTimeB); // Sort by time
-    });
-  
-    let seenDays = {};
-
-    // Set `showAddSymbol` to true only for the first entry of each day
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => {
-        if (!seenDays[svcHour.dayOfWeek]) {
-            svcHour.showAddSymbol = true;     // Show the add symbol
-            seenDays[svcHour.dayOfWeek] = true;
-        }
-    });
-    // Filter billing addresses associated with this locatio
-    this.associatedBillingAddresses = JSON.parse(JSON.stringify(this.oProviderLocation.providerLocationInfo[nIndex].providerLocBillingInfo));
-    
-
-    if (!this.oCurrentProviderLocationInfo.providerAlternateIDSection) {
-      this.providerNpi = new ProviderNpi();
-    this.providerNpi.providerTaxonomy =  [];
-    this.providerNpi.npi = '';
-      
-
-      this.providerNpi.serviceLocationId = 0;
-      this.providerNpi.providerSvcLocNpiId = 0;
-      
-
-      this.oCurrentProviderLocationInfo.providerAlternateIDSection = []
-      this.oCurrentProviderLocationInfo.providerAlternateIDSection.push({ providerNpi: [], medicaidId: null, medicare: null });
-
-    }else{
-      this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi.forEach((npi:any) => {
-        if(!npi.providerTaxonomy || npi.providerTaxonomy.length === 0){
-          npi.providerTaxonomy=  [];
-        }
-      });
-      
-
+    if ( !this.bIsServiceAddressValidated && !this.bIsInvalidAddressAllowed){
+      this.addService.fnRaiseWarningDlg("Invalid" ,"Please enter a valid address or accept to save an invalid address (More information is provided below Validate Address button)");
+      return;
     }
-
-    this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].medicare = {
-      "locationAlternateXrefId": null,
-      "providerServiceLocationMapId": 0,
-      "locationAltId": "",
-      "effectiveDate": null,
-      "expirationDate": null,
-      "userId": 0,
-      "state": "string"
+    if (!this.oCurrentProviderLocationInfo.phone && this.oCurrentProviderLocationInfo.phoneExt) {
+      this.addService.fnRaiseWarningDlg("Missing Phone", "Please enter the phone number.");
+      return;
     }
+  let timeValueInvalid = false;
+  const hasImproperNextDayHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some(hour => {
+      if ((hour.openTimeValue && hour.closeTimeValue === "") || (hour.openTimeValue === '' && hour.closeTimeValue)) {
+          timeValueInvalid = true;
+      }
 
-    
+      const openTime24 = this.convertTo24HourFormat(hour.openTimeValue);
+      const closeTime24 = this.convertTo24HourFormat(hour.closeTimeValue);
 
+      const [openHour, openMinutes] = openTime24.split(':').map(Number);
+      const [closeHour, closeMinutes] = closeTime24.split(':').map(Number);
 
-    // if(!this.oCurrentProviderLocationInfo.billingAddress1Current){
-    //     this.oCurrentProviderLocationInfo.billingAddress1Current = {
-    //       "street_line":this.oCurrentProviderLocationInfo.billingAddress1,
-    //       "secondary": this.oCurrentProviderLocationInfo.billingAddress2,
-    //       "city": this.oCurrentProviderLocationInfo.billingCity,
-    //       "state": this.oCurrentProviderLocationInfo.billingStateCode,
-    //       "zipcode": this.oCurrentProviderLocationInfo.billingZip,
-    //   }
-   // Trimming logic for serviceAddress
-  //  const serviceAddress = this.oCurrentProviderLocationInfo.serviceAddress.substring(0, 25);
-  //  this.oCurrentProviderLocationInfo.address2 = this.oCurrentProviderLocationInfo.serviceAddress.length > 25 
-  //      ? this.oCurrentProviderLocationInfo.serviceAddress.substring(25)
-  //      : this.oCurrentProviderLocationInfo.address2;
-  const serviceAddress = this.oCurrentProviderLocationInfo.serviceAddress;
+      return openHour > closeHour || (openHour === closeHour && openMinutes >= closeMinutes);
+  });
 
-  //  this.oCurrentProviderLocationInfo.serviceAddressCurrent = {
-  //      "street_line": this.oCurrentProviderLocationInfo.serviceAddress,
-  //      "address2": this.oCurrentProviderLocationInfo.serviceAddress.length > 25 
-  //      ? this.oCurrentProviderLocationInfo.serviceAddress.substring(25)
-  //      : this.oCurrentProviderLocationInfo.address2,
-  //      "city": this.oCurrentProviderLocationInfo.city,
-  //      "stateCode": this.oCurrentProviderLocationInfo.stateCode,
-  //      "zip": this.oCurrentProviderLocationInfo.zip,
-  //  }
-  this.oCurrentProviderLocationInfo.serviceAddressCurrent = {
-    "street_line": this.oCurrentProviderLocationInfo.serviceAddress,
-    "address2": this.oCurrentProviderLocationInfo.address2,
-    "city": this.oCurrentProviderLocationInfo.city,
-    "stateCode": this.oCurrentProviderLocationInfo.stateCode,
-    "zip": this.oCurrentProviderLocationInfo.zip,
-}
-   this.oCurrentProviderLocationInfo.serviceAddress= serviceAddress;
-
-  
-    //  this.taxonamy = {
-    //   id:this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy[0].id,
-    //   taxonomyCode:this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy[0].taxonomyCode
-    //  }
-    //  this.alternateIdActive = this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy[0].active;
-    //   }
-    //   this.isSameAsServiceAddress = this.areAddressesSame(
-    //     this.oCurrentProviderLocationInfo.serviceAddress, 
-    //     this.oCurrentProviderLocationInfo.billingAddress1
-    // );
-    this.bIsServiceAddressValidated = this.oCurrentProviderLocationInfo.addressValidated;
-    
-    //this.oCurrentProviderLocationInfo.addressValidated = this.bIsLocationValidated;
-    
-    this.nEditIndex = nIndex;
-    //this.bIsServiceAddressValidated = true;
-
-    this.isEditMode = true;
-    this.bIsDirty = true;
-    this.bIsAddclicked = false;
-    this.Tin = null;
-    this.locationsByTin = [];
-    this.isBillingEditMode =false;
-   
-    
-
-    this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi.forEach((npiIndex) => {
-      npiIndex.providerTaxonomy.forEach((taxonomy) => {
-        if (taxonomy.taxonomyCode.length) {
-          this.disabledTaxonomies.push(taxonomy.taxonomyCode);
-        }
-      });
-    });
-
-    setTimeout(() => {
-      this.addService.scrollToTarget(this.addPlanElement);
-    }, 20);
+  if (timeValueInvalid) {
+      this.addService.fnRaiseWarningDlg("Incomplete Hours", "Please fill both open and close time");
+      return;
   }
 
- if(this.providerForm.phone){
-              this.providerForm.phone=this.formatNumbersonfetch(this.providerForm.phone);
-            }
-            if(this.providerForm.fax){
-              this.providerForm.fax=this.formatNumbersonfetch(this.providerForm.fax);
-            }
+  if (hasImproperNextDayHours) {
+      this.addService.fnRaiseWarningDlg("Invalid Hours", "End time exceeds the allowed period for the day.");
+      return;
+  }
 
- formatNumbersonfetch(value: string): string {
+  const hasOverlappingHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some((currentHour, index, array) => {
+      const currentOpenTime24 = this.convertTo24HourFormat(currentHour.openTimeValue);
+      const currentCloseTime24 = this.convertTo24HourFormat(currentHour.closeTimeValue);
 
-    if (value.length === 10) {
-      value = value.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3');
+      const [currentOpenHour, currentOpenMinutes] = currentOpenTime24.split(':').map(Number);
+      const [currentCloseHour, currentCloseMinutes] = currentCloseTime24.split(':').map(Number);
+
+      return array.some((checkHour, checkIndex) => {
+          if (index === checkIndex) return false;
+          if (currentHour.dayOfWeek !== checkHour.dayOfWeek) return false;
+
+          const checkOpenTime24 = this.convertTo24HourFormat(checkHour.openTimeValue);
+          const checkCloseTime24 = this.convertTo24HourFormat(checkHour.closeTimeValue);
+
+          const [checkOpenHour, checkOpenMinutes] = checkOpenTime24.split(':').map(Number);
+          const [checkCloseHour, checkCloseMinutes] = checkCloseTime24.split(':').map(Number);
+
+          return (
+              (currentOpenHour < checkCloseHour || (currentOpenHour === checkCloseHour && currentOpenMinutes < checkCloseMinutes)) &&
+              (currentCloseHour > checkOpenHour || (currentCloseHour === checkOpenHour && currentCloseMinutes > checkOpenMinutes))
+          );
+      });
+  });
+
+  if (hasOverlappingHours) {
+      this.addService.fnRaiseWarningDlg("Overlap Detected", "Office hours cannot overlap for the same day.");
+      return;
+  }
+  this.oCurrentProviderLocationInfo.providerSvcLocHours.sort((a, b) => {
+    const dayOrder = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+
+    // Sort by day of the week first
+    const dayDifference = dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek);
+    if (dayDifference !== 0) return dayDifference;
+
+    // If same day, sort by openTimeValue
+    const openTimeA = this.convertTo24HourFormat(a.openTimeValue);
+    const openTimeB = this.convertTo24HourFormat(b.openTimeValue);
+
+    return openTimeA.localeCompare(openTimeB); // Sort by time
+  });
+
+  // Convert all time values to 24-hour format without 'AM'/'PM'
+  this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(hour => {
+      hour.openTimeValue = this.convertTo24HourFormat(hour.openTimeValue);
+      hour.closeTimeValue = this.convertTo24HourFormat(hour.closeTimeValue);
+  });
+    this.showAccordians = false;
+
+    const keysToDelete = [
+      'billingAddress1', 'billingAddress2', 'billingZip', 'billingCity',
+      'billingCounty', 'billingStateCode', 'billingDefaultCity',
+      'billingAddressValidated', 'taxId', 'taxTypeId', 'payeeName',
+      'providerSvcLocPayeeId', 'w9flag', 'effectiveDate', 'expirationDate'
+    ];
+
+
+    const locationRequest = {
+      "providerId": this.nProviderId,
+      "providerLocationInfo": [this.oCurrentProviderLocationInfo]
     }
 
-    return value;
+    delete locationRequest.providerLocationInfo[0].billingAddress1Current;
+    delete locationRequest.providerLocationInfo[0].serviceAddressCurrent;
+    //
+  
+//
+locationRequest.providerLocationInfo[0].addressValidated = true;
+    locationRequest.providerLocationInfo.forEach(locationInfo => {
+      if (locationInfo.providerSvcLocHours) {
+        locationInfo.providerSvcLocHours = locationInfo.providerSvcLocHours.filter(
+          svcHour => !(svcHour.openTimeValue === svcHour.closeTimeValue)
+        );
+      }
+      keysToDelete.forEach(key => {
+        delete locationInfo[key];
+      });
+    });
+    locationRequest.providerLocationInfo[0].providerLocBillingInfo = this.providerLocBillingInfo.filter(billingInfo => !billingInfo.providerSvcLocPayeeId || billingInfo['isLocationByTin']);
+    
+    locationRequest.providerLocationInfo.forEach(locationInfo => {
+      if (locationInfo.providerSvcLocHours) {
+        locationInfo.providerSvcLocHours.forEach(svcHour => {
+          delete svcHour.day; // Delete the day property
+           delete svcHour.showAddSymbol; // Delete the showAddSymbol property
+        });
+      }
+    });
+    
+    locationRequest.providerLocationInfo[0].providerLocBillingInfo = [...this.associatedBillingAddresses,...locationRequest.providerLocationInfo[0].providerLocBillingInfo];
+
+    locationRequest.providerLocationInfo[0].providerLocBillingInfo.forEach(location => {
+      delete location.billingAddress1Current;
+
+    })
+  
+    locationRequest.providerLocationInfo[0].providerAlternateIDSection[0].providerNpi.forEach(providerNpi => {
+      providerNpi.providerTaxonomy = providerNpi.providerTaxonomy.filter(taxObj => taxObj.taxonomyCode);
+  });
+
+  // Ensure providerTaxonomy is empty if no taxonomy codes are present
+  locationRequest.providerLocationInfo[0].providerAlternateIDSection[0].providerNpi.forEach(providerNpi => {
+      if (providerNpi.providerTaxonomy.length === 0) {
+          providerNpi.providerTaxonomy = [];
+      } else {
+          providerNpi.providerTaxonomy = providerNpi.providerTaxonomy.map(taxonomy => ({
+              id: this.getTaxonamtByCode(taxonomy),
+              taxonomyCode: taxonomy?.taxonomyCode,
+              isPrimary: taxonomy.isPrimary ? true : false,
+              active: taxonomy?.active ? true : false,
+              isDelete: taxonomy.isDelete
+          }));
+      }
+  });
+
+  // Filter out NPI entries where npi is empty
+locationRequest.providerLocationInfo[0].providerAlternateIDSection[0].providerNpi = 
+locationRequest.providerLocationInfo[0].providerAlternateIDSection[0].providerNpi.filter(providerNpi => providerNpi.npi);
+
+  if (this.addService.eProviderType === ProviderTypeEnum.PRACTITIONER) {
+      locationRequest.providerLocationInfo[0].providerAlternateIDSection = null;
+  }else {
+    const hasNpi = locationRequest.providerLocationInfo[0].providerAlternateIDSection[0].providerNpi.some(npiObj => npiObj.npi);
+    if (!hasNpi) {
+        locationRequest.providerLocationInfo[0].providerAlternateIDSection = null;
+    } else {
+        delete locationRequest.providerLocationInfo[0].providerAlternateIDSection[0].medicare;
+        delete locationRequest.providerLocationInfo[0].providerAlternateIDSection[0].medicaidId;
+    }
   }
+  if(locationRequest.providerLocationInfo){
+    this.fnSetInactiveLocationSectionVisibility(false);
+    this.fnSetInactiveBillingLocationSectionVisibility(false);
+    this.bIsLoading = true;
+    
+    this.addService.saveLocationInformation(locationRequest).subscribe((res: any) => {
+      this.oCurrentProviderLocationInfo = new providerLocationInfo();
+      this.fnFetchData()
+      this.serviceLocations =[]
+      
+     
+      this.bIsDirty = false;
+      this.bIsLoading = false;
+    },
+      err => {
+        this.bIsLoading = false;
+
+        this.addService.fnRaiseGenericAlert('savePracticeLocation', err);
+        
+        this.fnFetchData()
+        this.nEditIndex = -1;
+        this.isEditMode = false;
+        
+
+      })
+    }
+
+     
+
+    this.selectedBillingAddressId = undefined;
+    this.addNewBillingAddress = false;
+    this.showAccordians = false;
+    this.isEditMode = false;
+    this.bIsDirty = false;
+    this.addNewBillingAddress = false;
+    this.associatedBillingAddresses = null;
+    this.bIsServiceAddressValidated = false;
+    this.oCurrentProviderLocationInfo = new providerLocationInfo();
+  }
+
+if (this.oCurrentProviderLocationInfo.phone) {
+      this.oCurrentProviderLocationInfo.phone = this.oCurrentProviderLocationInfo.phone.replace(/\D/g, '');
+    }
+    if (this.oCurrentProviderLocationInfo.fax) {
+      this.oCurrentProviderLocationInfo.fax = this.oCurrentProviderLocationInfo.fax.replace(/\D/g, '');
+    }
