@@ -1,356 +1,196 @@
- if(this.oCurrentProviderLocationInfo.phone){
-      this.oCurrentProviderLocationInfo.phone = this.oCurrentProviderLocationInfo.phone.replace(/\D/g,'');
+ public fnEditLocation(nIndex: number): void {
+    if(this.isBillingEditMode || this.isEditMode || this.isReplaceMode || this.isReplaceBillingMode||this.serviceLocations && this.serviceLocations.length>0){
+      this.addService.fnRaiseWarningDlg("Invalid","Edit changes should be saved or discarded");
+      return;
     }
-    if(this.oCurrentProviderLocationInfo.fax){
-      this.oCurrentProviderLocationInfo.fax = this.oCurrentProviderLocationInfo.fax.replace(/\D/g,'');
-    }
+  
+    this.oCurrentProviderLocationInfo = JSON.parse(JSON.stringify({ ...this.oProviderLocation.providerLocationInfo[nIndex] }));
 
-fnAddLocationDetails() {
+    // this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].effectiveDate = new Date(this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].effectiveDate)
 
-    if(!this.servicetinclicked){
-      this.addService.fnRaiseWarningDlg("Invalid"," Please click checkbox to add details");
-      return;
-    }
+    this.isReplaceBillingMode = false;
 
-    if(!this.isbillingaddressclicked){
-      this.addService.fnRaiseWarningDlg("Missing Billing Details" ," Please click Add button in Billing section ");
-      return;
-    }
-    
-    
-    if ( !this.bIsServiceAddressValidated && !this.bIsInvalidAddressAllowed){
-      this.addService.fnRaiseWarningDlg("Invalid" ,"Please enter a valid address or accept to save an invalid address (More information is provided below Validate Address button)");
-      return;
-    }
-    if (!this.oCurrentProviderLocationInfo.phone && this.oCurrentProviderLocationInfo.phoneExt) {
-      this.addService.fnRaiseWarningDlg("Missing Phone", "Please enter the phone number.");
-      return;
-  }
-  let timeValueInvalid = false;
-    const hasImproperNextDayHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some(hour => {
-        if ((hour.openTimeValue && hour.closeTimeValue === "") || (hour.openTimeValue === '' && hour.closeTimeValue)) {
-            timeValueInvalid = true;
+    this.isPracticeLocationAccordionOpen = true;
+
+    const allDays = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]; // Define all possible days
+    this.oCurrentProviderLocationInfo.providerSvcLocHours = this.oCurrentProviderLocationInfo.providerSvcLocHours || []; // Initialize providerSvcLocHours if it's not an array
+
+    const existingDays = this.oCurrentProviderLocationInfo.providerSvcLocHours.map(hour => hour.dayOfWeek); // Find out which days are missing
+    const missingDays = allDays.filter(day => !existingDays.includes(day));
+
+    // Add default hours for missing days
+    missingDays.forEach(missingDay => {
+        this.oCurrentProviderLocationInfo.providerSvcLocHours.push(this.getDefaultHour(missingDay));
+    });
+
+    // Sort providerSvcLocHours by day of the week
+    this.oCurrentProviderLocationInfo.providerSvcLocHours.sort((a, b) => {
+        return allDays.indexOf(a.dayOfWeek) - allDays.indexOf(b.dayOfWeek);
+    });
+
+    // Convert existing times to 12-hour format with AM/PM for display
+    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(hour => {
+        if (hour.openTimeValue) {
+            hour.openTimeValue = this.convertTo12HourFormat(hour.openTimeValue);
         }
-
-        const openTime24 = this.convertTo24HourFormat(hour.openTimeValue);
-        const closeTime24 = this.convertTo24HourFormat(hour.closeTimeValue);
-
-        const [openHour, openMinutes] = openTime24.split(':').map(Number);
-        const [closeHour, closeMinutes] = closeTime24.split(':').map(Number);
-
-        return openHour > closeHour || (openHour === closeHour && openMinutes >= closeMinutes);
+        if (hour.closeTimeValue) {
+            hour.closeTimeValue = this.convertTo12HourFormat(hour.closeTimeValue);
+        }
     });
 
-    if (timeValueInvalid) {
-        this.addService.fnRaiseWarningDlg("Incomplete Hours", "Please fill both open and close time");
-        return;
-    }
+    // Hide the add symbol for all entries initially
+    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => svcHour.showAddSymbol = false);
 
-    if (hasImproperNextDayHours) {
-        this.addService.fnRaiseWarningDlg("Invalid Hours", "End time exceeds the allowed period for the day.");
-        return;
-    }
-
-    const hasOverlappingHours = this.oCurrentProviderLocationInfo.providerSvcLocHours.some((currentHour, index, array) => {
-        const currentOpenTime24 = this.convertTo24HourFormat(currentHour.openTimeValue);
-        const currentCloseTime24 = this.convertTo24HourFormat(currentHour.closeTimeValue);
-
-        const [currentOpenHour, currentOpenMinutes] = currentOpenTime24.split(':').map(Number);
-        const [currentCloseHour, currentCloseMinutes] = currentCloseTime24.split(':').map(Number);
-
-        return array.some((checkHour, checkIndex) => {
-            if (index === checkIndex) return false;
-            if (currentHour.dayOfWeek !== checkHour.dayOfWeek) return false;
-
-            const checkOpenTime24 = this.convertTo24HourFormat(checkHour.openTimeValue);
-            const checkCloseTime24 = this.convertTo24HourFormat(checkHour.closeTimeValue);
-
-            const [checkOpenHour, checkOpenMinutes] = checkOpenTime24.split(':').map(Number);
-            const [checkCloseHour, checkCloseMinutes] = checkCloseTime24.split(':').map(Number);
-
-            return (
-                (currentOpenHour < checkCloseHour || (currentOpenHour === checkCloseHour && currentOpenMinutes < checkCloseMinutes)) &&
-                (currentCloseHour > checkOpenHour || (currentCloseHour === checkOpenHour && currentCloseMinutes > checkOpenMinutes))
-            );
-        });
-    });
-
-    if (hasOverlappingHours) {
-        this.addService.fnRaiseWarningDlg("Overlap Detected", "Office hours cannot overlap for the same day.");
-        return;
-    }
-
+    // Track the first entry of each day
+    
     this.oCurrentProviderLocationInfo.providerSvcLocHours.sort((a, b) => {
       const dayOrder = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-
+  
       // Sort by day of the week first
       const dayDifference = dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek);
       if (dayDifference !== 0) return dayDifference;
-
+  
       // If same day, sort by openTimeValue
       const openTimeA = this.convertTo24HourFormat(a.openTimeValue);
       const openTimeB = this.convertTo24HourFormat(b.openTimeValue);
-
+  
       return openTimeA.localeCompare(openTimeB); // Sort by time
     });
+  
+    let seenDays = {};
 
-    // Convert all time values to 24-hour format without 'AM'/'PM'
-    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(hour => {
-        hour.openTimeValue = this.convertTo24HourFormat(hour.openTimeValue);
-        hour.closeTimeValue = this.convertTo24HourFormat(hour.closeTimeValue);
-    });
-//   if (
-//     this.oCurrentProviderLocationInfo.providerAlternateIDSection &&
-//     this.oCurrentProviderLocationInfo.providerAlternateIDSection[0] &&
-//     this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi.length === 0
-// ) {
-//     this.oCurrentProviderLocationInfo.providerAlternateIDSection = null;
-// }
-
-   
-    this.fnAddLocation();
-    this.showAccordians = false;
-
-    const keysToDelete = [
-      'billingAddress1', 'billingAddress2', 'billingZip', 'billingCity',
-      'billingCounty', 'billingStateCode', 'billingDefaultCity',
-      'billingAddressValidated', 'taxId', 'taxTypeId', 'payeeName',
-      'providerSvcLocPayeeId', 'w9flag', 'effectiveDate', 'expirationDate'
-    ];
-
-
-    this.providerLocBillingInfo.forEach(location => {
-      delete location.billingAddress1Current;
-    })
-     
-   
-    
-
-    const providerLocation = new ProviderLocation();
-    providerLocation.providerLocationInfo = this.oProviderLocation.providerLocationInfo.filter(locInfo => !locInfo.serviceLocationId || !locInfo.providerServiceLocationMapId)
-    if(this.isservicemode){
-      const selectedLocation = this.serviceLocations[this.selectedLocationIndex];
-      let item:any = {};
-      item.taxId=selectedLocation.taxId;
-      item.taxTypeId=selectedLocation.taxTypeId;
-      item.billingAddress1=selectedLocation.billingAddress1;
-      item.billingAddress2=selectedLocation.billingAddress2;
-      item.billingCity=selectedLocation.billingCity;
-      item.billingStateCode=selectedLocation.billingStateCode;
-    item.billingZip=  selectedLocation.billingZip;
-    item.effectiveDate=selectedLocation.effectiveDate;
-    item.expirationDate=selectedLocation.expirationDate;
-      item.billingCounty=selectedLocation.billingCounty;
-     item.billingDefaultCity= selectedLocation.billingDefaultCity;
-     item.payeeName= selectedLocation.payeeName;
-      item.providerSvcLocPayeeId=selectedLocation.providerSvcLocPayeeId;
-     item.billingAddressValidated=selectedLocation.billingAddressValidated;
-     item.providerSvcLocPayeeMapID=selectedLocation.providerSvcLocPayeeMapID;
-      providerLocation.providerLocationInfo[0].providerLocBillingInfo =[item]
-    } else if(providerLocation.providerLocationInfo.length > 0)
-    providerLocation.providerLocationInfo[0].providerLocBillingInfo = this.providerLocBillingInfo.filter(billingInfo => !billingInfo.providerSvcLocPayeeId || billingInfo['isLocationByTin']);
-    else if(this.selectedLocation){
-      providerLocation.providerLocationInfo = this.oProviderLocation.providerLocationInfo.filter(locInfo => locInfo.providerServiceLocationMapId == this.selectedLocation)
-      providerLocation.providerLocationInfo[0].providerLocBillingInfo = this.providerLocBillingInfo.filter(billingInfo => !billingInfo.providerSvcLocPayeeId || billingInfo['isLocationByTin']);
-    
-    } 
-   
-    providerLocation.providerLocationInfo.forEach(locationInfo => {
-      if (locationInfo.providerSvcLocHours) {
-        locationInfo.providerSvcLocHours.forEach(svcHour => {
-          delete svcHour.day; // Delete the day property
-           delete svcHour.showAddSymbol; // Delete the showAddSymbol property
-        });
-      }
-    });
-
-    providerLocation.providerLocationInfo.forEach(locationInfo => {
-      if(locationInfo.providerSvcLocHours){
-        locationInfo.providerSvcLocHours = locationInfo.providerSvcLocHours.filter(
-          svcHour => !(svcHour.openTimeValue === svcHour.closeTimeValue)
-        );
+    // Set `showAddSymbol` to true only for the first entry of each day
+    this.oCurrentProviderLocationInfo.providerSvcLocHours.forEach(svcHour => {
+        if (!seenDays[svcHour.dayOfWeek]) {
+            svcHour.showAddSymbol = true;     // Show the add symbol
+            seenDays[svcHour.dayOfWeek] = true;
         }
-        keysToDelete.forEach(key => {
-          delete locationInfo[key];
-        });
+    });
+    // Filter billing addresses associated with this locatio
+    this.associatedBillingAddresses = JSON.parse(JSON.stringify(this.oProviderLocation.providerLocationInfo[nIndex].providerLocBillingInfo));
+    
+
+    if (!this.oCurrentProviderLocationInfo.providerAlternateIDSection) {
+      this.providerNpi = new ProviderNpi();
+    this.providerNpi.providerTaxonomy =  [];
+    this.providerNpi.npi = '';
+      
+
+      this.providerNpi.serviceLocationId = 0;
+      this.providerNpi.providerSvcLocNpiId = 0;
+      
+
+      this.oCurrentProviderLocationInfo.providerAlternateIDSection = []
+      this.oCurrentProviderLocationInfo.providerAlternateIDSection.push({ providerNpi: [], medicaidId: null, medicare: null });
+
+    }else{
+      this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi.forEach((npi:any) => {
+        if(!npi.providerTaxonomy || npi.providerTaxonomy.length === 0){
+          npi.providerTaxonomy=  [];
+        }
+      });
+      
+
+    }
+
+    this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].medicare = {
+      "locationAlternateXrefId": null,
+      "providerServiceLocationMapId": 0,
+      "locationAltId": "",
+      "effectiveDate": null,
+      "expirationDate": null,
+      "userId": 0,
+      "state": "string"
+    }
+
+    
+
+
+    // if(!this.oCurrentProviderLocationInfo.billingAddress1Current){
+    //     this.oCurrentProviderLocationInfo.billingAddress1Current = {
+    //       "street_line":this.oCurrentProviderLocationInfo.billingAddress1,
+    //       "secondary": this.oCurrentProviderLocationInfo.billingAddress2,
+    //       "city": this.oCurrentProviderLocationInfo.billingCity,
+    //       "state": this.oCurrentProviderLocationInfo.billingStateCode,
+    //       "zipcode": this.oCurrentProviderLocationInfo.billingZip,
+    //   }
+   // Trimming logic for serviceAddress
+  //  const serviceAddress = this.oCurrentProviderLocationInfo.serviceAddress.substring(0, 25);
+  //  this.oCurrentProviderLocationInfo.address2 = this.oCurrentProviderLocationInfo.serviceAddress.length > 25 
+  //      ? this.oCurrentProviderLocationInfo.serviceAddress.substring(25)
+  //      : this.oCurrentProviderLocationInfo.address2;
+  const serviceAddress = this.oCurrentProviderLocationInfo.serviceAddress;
+
+  //  this.oCurrentProviderLocationInfo.serviceAddressCurrent = {
+  //      "street_line": this.oCurrentProviderLocationInfo.serviceAddress,
+  //      "address2": this.oCurrentProviderLocationInfo.serviceAddress.length > 25 
+  //      ? this.oCurrentProviderLocationInfo.serviceAddress.substring(25)
+  //      : this.oCurrentProviderLocationInfo.address2,
+  //      "city": this.oCurrentProviderLocationInfo.city,
+  //      "stateCode": this.oCurrentProviderLocationInfo.stateCode,
+  //      "zip": this.oCurrentProviderLocationInfo.zip,
+  //  }
+  this.oCurrentProviderLocationInfo.serviceAddressCurrent = {
+    "street_line": this.oCurrentProviderLocationInfo.serviceAddress,
+    "address2": this.oCurrentProviderLocationInfo.address2,
+    "city": this.oCurrentProviderLocationInfo.city,
+    "stateCode": this.oCurrentProviderLocationInfo.stateCode,
+    "zip": this.oCurrentProviderLocationInfo.zip,
+}
+   this.oCurrentProviderLocationInfo.serviceAddress= serviceAddress;
+
+  
+    //  this.taxonamy = {
+    //   id:this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy[0].id,
+    //   taxonomyCode:this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy[0].taxonomyCode
+    //  }
+    //  this.alternateIdActive = this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy[0].active;
+    //   }
+    //   this.isSameAsServiceAddress = this.areAddressesSame(
+    //     this.oCurrentProviderLocationInfo.serviceAddress, 
+    //     this.oCurrentProviderLocationInfo.billingAddress1
+    // );
+    this.bIsServiceAddressValidated = this.oCurrentProviderLocationInfo.addressValidated;
+    
+    //this.oCurrentProviderLocationInfo.addressValidated = this.bIsLocationValidated;
+    
+    this.nEditIndex = nIndex;
+    //this.bIsServiceAddressValidated = true;
+
+    this.isEditMode = true;
+    this.bIsDirty = true;
+    this.bIsAddclicked = false;
+    this.Tin = null;
+    this.locationsByTin = [];
+    this.isBillingEditMode =false;
+   
+    
+
+    this.oCurrentProviderLocationInfo.providerAlternateIDSection[0].providerNpi.forEach((npiIndex) => {
+      npiIndex.providerTaxonomy.forEach((taxonomy) => {
+        if (taxonomy.taxonomyCode.length) {
+          this.disabledTaxonomies.push(taxonomy.taxonomyCode);
+        }
+      });
     });
 
-    providerLocation.providerLocationInfo[0].providerLocBillingInfo.forEach(billinInfo =>{
-      if(billinInfo['isLocationByTin']){
-        delete billinInfo['isLocationByTin']
-      }
-    })
-
-   
-    //filter npi it that doesnot have any value
-    providerLocation.providerLocationInfo[0].providerAlternateIDSection[0].providerNpi = 
-    providerLocation.providerLocationInfo[0].providerAlternateIDSection[0].providerNpi.filter(providerNpi => providerNpi.npi);
-  
-    providerLocation.providerId = this.nProviderId;
-    providerLocation.providerLocationInfo[0].providerAlternateIDSection[0].providerNpi.forEach((providerNpi) =>{
-      providerNpi.providerTaxonomy = providerNpi.providerTaxonomy.filter(taxObj => taxObj.taxonomyCode )
-      providerNpi.providerSvcLocNpiId = 0;
-    if (providerNpi.providerTaxonomy.length >0 ) {
-      providerNpi.providerTaxonomy = providerNpi.providerTaxonomy.map(taxonomy => ({
-        id: this.getTaxonamtByCode(taxonomy) ,
-        taxonomyCode: taxonomy?.taxonomyCode,
-        isPrimary: taxonomy.isPrimary?true:false,
-        active: taxonomy?.active ?true:false,
-        isDelete: false
-      }));
-    }else{
-      providerNpi.providerTaxonomy =[]; 
-  
-    }
-    if (this.addService.eProviderType === ProviderTypeEnum.PRACTITIONER || !providerNpi.providerTaxonomy  ) {
-      providerLocation.providerLocationInfo[0].providerAlternateIDSection = null;
-    }
-    else {
-      if(!providerNpi.providerTaxonomy){
-        providerLocation.providerLocationInfo[0].providerAlternateIDSection = null;
-      }else{
-       delete providerLocation.providerLocationInfo[0].providerAlternateIDSection[0].medicaidId ;
-       delete providerLocation.providerLocationInfo[0].providerAlternateIDSection[0].medicare ;
-      }
-      //this.userId =null;
-      //providerLocation.providerLocationInfo[0].providerAlternateIDSection = null;
-    }
-  })
-   if(providerLocation.providerLocationInfo[0].providerAlternateIDSection && providerLocation.providerLocationInfo[0].providerAlternateIDSection[0].providerNpi.length === 0){
-     providerLocation.providerLocationInfo[0].providerAlternateIDSection = null;
-   }
-    providerLocation.providerLocationInfo[0].isPrimary = this.isPrimary;
-
-    // Handling Replace Location
-    if (this.isReplaceMode) {
-
-      //Setting new expiration Date
-      this.handleLocationExpirationDate(this.replaceLocationExpirationDate, this.replaceIndex, null);
-
-      //
-      const providerLocationInfoBeingReplaced = {...this.oProviderLocation.providerLocationInfo[this.replaceIndex]};
-      providerLocation.providerLocationInfo.push(providerLocationInfoBeingReplaced);
-      providerLocation.providerLocationInfo[0].replaceLocId = providerLocationInfoBeingReplaced.serviceLocationId.toString();
-      providerLocationInfoBeingReplaced.replaceLocId = providerLocationInfoBeingReplaced.serviceLocationId.toString();
-      providerLocation.providerLocationInfo = providerLocation.providerLocationInfo.reverse();
-
-      this.submitEditedProviderLocationInfo(providerLocation);
-
-      //Resetting values to initial state
-      this.replaceLocationExpirationDate = null;
-      this.replaceIndex = -1;
-      this.isReplaceMode = false;
-
-    } else {
-      this.fnSetInactiveLocationSectionVisibility(false);
-      this.fnSetInactiveBillingLocationSectionVisibility(false);
-      this.bIsLoading = true;
-      this.addService.saveLocationInformation(providerLocation).subscribe((res: any) => {
-        console.log(res)
-        this.oCurrentProviderLocationInfo = new providerLocationInfo();
-        this.bIsDirty = false;
-        this.bIsLoading = false;
-        this.serviceLocations =[]
-        this.ServiceLocation="";
-        this.bIsSearchResultsEmpty = false;
-        this.bIsTinEmpty = false;
-         this.searchperformed =false;
-         this.showbillingaddressfields=true;
-         
-         this.isservicemode= false;
-         this.selectedLocationIndex = null;
-         this.fnFetchData();
-
-      }, err => {
-        this.bIsLoading = false;
-        //this.addService.fnRaiseGenericAlert(JSON.stringify(err));
-        //console.log(err);
-        
-        this.addService.fnRaiseGenericAlert('savePracticeLocation', err);
-         this.oCurrentProviderLocationInfo = new providerLocationInfo();
-         this.ServiceLocation='';
-      this.serviceLocations=[];
-      this.bIsSearchResultsEmpty = false;
-      this.bIsTinEmpty = false;
-       this.searchperformed =false;
-       this.showbillingaddressfields=true;
-    
-       this.isservicemode= false;
-       this.selectedLocationIndex = null;
-       
-         this.fnFetchData();
-         
-        
-        
-      })
-    }
-
+    setTimeout(() => {
+      this.addService.scrollToTarget(this.addPlanElement);
+    }, 20);
   }
 
-    <div class="form-group col-md-6 col-lg-4 col-xl-3">
-                    <label for="inputData">Phone </label>
-                    <input type="tel" class="form-control form-control-custom" id="phone" name="phone" #phone="ngModel"
-                        
-                    [(ngModel)]="oCurrentProviderLocationInfo.phone"
-                        [ngClass]="{'red-border': phone.invalid && (phone.dirty || phone.touched )}"
-                        pattern="^\d{3}-\d{3}-\d{4}$" (input)="formatNumber($event,'phone')"  maxlength="12">
+ if(this.providerForm.phone){
+              this.providerForm.phone=this.formatNumbersonfetch(this.providerForm.phone);
+            }
+            if(this.providerForm.fax){
+              this.providerForm.fax=this.formatNumbersonfetch(this.providerForm.fax);
+            }
 
-                    <div class="error-tooltip error-tooltip-offset"
-                        *ngIf="phone.invalid && (phone.dirty || phone.touched )">
-                      <ng-container *ngIf="phone.errors?.pattern">Invalid</ng-container>
+ formatNumbersonfetch(value: string): string {
 
-                    </div>
-                </div>
+    if (value.length === 10) {
+      value = value.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3');
+    }
 
-{
-    "providerLocationInfo": [
-        {
-            "serviceLocationId": 0,
-            "isDelete": false,
-            "locationAltId": null,
-            "serviceAddress": "8 1/2 4th Ave",
-            "address2": "",
-            "defaultCity": "Hudson Falls",
-            "replaceLocId": "",
-            "publicTransportationFlag": false,
-            "handicappedAccessibleFlag": false,
-            "locationAlternateXrefId": 0,
-            "providerLocBillingInfo": [
-                {
-                    "billingAddress1": "87 1/2 8th St",
-                    "billingAddress2": "",
-                    "billingCity": "Fond du Lac",
-                    "billingStateCode": "WI",
-                    "billingZip": "54935-5054",
-                    "billingDefaultCity": "Fond du Lac",
-                    "billingCounty": "Fond du Lac",
-                    "payeeName": "bjhb",
-                    "taxId": "636868738",
-                    "taxTypeId": "E",
-                    "billingAddressValidated": true,
-                    "w9flag": true,
-                    "effectiveDate": "2025-03-21",
-                    "expirationDate": null,
-                    "providerSvcLocPayeeId": 0,
-                    "providerSvcLocPayeeMapID": 0,
-                    "isReplace": false,
-                    "isDelete": false
-                }
-            ],
-            "isPrimary": false,
-            "providerAlternateIDSection": null,
-            "providerSvcLocHours": [],
-            "addressId": 0,
-            "providerServiceLocationMapId": 0,
-            "locationName": "testphone",
-            "addressValidated": true,
-            "city": "Hudson Falls",
-            "stateCode": "NY",
-            "zip": "12839-1930",
-            "county": "Washington",
-            "phone": "333-444-5555",
-            "fax": "222-666-7777"
-        }
-    ],
-    "providerId": 34077
-}
+    return value;
+  }
