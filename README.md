@@ -1,14 +1,15 @@
-<div class="form-group col-md-6 col-lg-4 col-xl-3">
-  <label for="effectiveDate">Effective Date<span class="required-star"> *</span></label>
-  <div class="input-group">
-    <input maxlength="10" dateFormater class="data-input form-control"
-      [ngClass]="{'red-border': (effectiveDate.invalid && (effectiveDate.dirty || effectiveDate.touched))}"
-      placeholder="mm/dd/yyyy" name="effectiveDateupdate" #effectiveDate="ngModel"
-      [(ngModel)]="selectedBillingAddress.effectiveDate"
-      #dp1="ngbDatepicker" ngbDatepicker/>
-    <i class="cal-icon far fa-calendar" (click)="dp1.toggle()"></i>
-    <div class="error-tooltip">
-      <ng-container *ngIf="effectiveDate.invalid && (effectiveDate.dirty || effectiveDate.touched)">Invalid date</ng-container>
-    </div>
-  </div>
-</div>
+ <div class="form-group col-md-6 col-lg-4 col-xl-3">
+                        <label for="effectiveDate">Effective Date<span class="required-star"> *</span></label>
+                        <div class="input-container">
+                          <input type="date" class="form-control form-control-custom"
+                            [ngClass]="{'red-border': ( effectiveDate.invalid && (effectiveDate.dirty || effectiveDate.touched|| formsubmitted ))}"
+                            id="effectiveDate" name="effectiveDate"
+                            [ngModel]="oCurrentProviderLocationInfo.effectiveDate | date: 'yyyy-MM-dd'"
+                            (ngModelChange)="oCurrentProviderLocationInfo.effectiveDate= $event"
+                            #effectiveDate="ngModel" required />
+                          <div class="error-tooltip"
+                            *ngIf="effectiveDate.invalid && (effectiveDate.dirty || effectiveDate.touched|| formsubmitted)">
+                            Required
+                          </div>
+                        </div>
+                      </div>
