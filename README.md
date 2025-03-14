@@ -1,3 +1,4 @@
+<div class="modal-body" style="display: inline-flex;">
     <div class="form-group col-12" style="display: inline-flex;">
         <label for="locationExpirationDate">Expiration Date<span class="required-star"> *</span></label>
         <div class="input-group" style="max-width: 50% !important; margin-left: 3% !important;">
@@ -5,7 +6,9 @@
                 [ngClass]="{'red-border': (!sLocationExpirationDate && isTerminateBtnClicked)}"
                 placeholder="mm/dd/yyyy" id="locationExpirationDate" name="locationExpirationDate"
                 [(ngModel)]="sLocationExpirationDate" #dp4="ngbDatepicker" ngbDatepicker required />
-            <i class="cal-icon far fa-calendar" (click)="dp4.toggle()"></i>
+            <div class="input-group-append">
+                <i class="cal-icon far fa-calendar input-group-text" (click)="dp4.toggle()"></i>
+            </div>
         </div>
         <div class="error-tooltip error-tooltip-offset" style="margin-top: 1% !important; margin-right: 25% !important;"
             *ngIf="!sLocationExpirationDate && isTerminateBtnClicked">
