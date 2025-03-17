@@ -1,16 +1,9 @@
-<div class="form-group col-md-6 col-lg-4 col-xl-3">
-    <label for="expirationDateupdate">Expiration Date</label>
-    <div class="input-group">
-        <input type="text" maxlength="10" dateFormater class="form-control form-control-custom custom-date-input"
-            [ngClass]="{'red-border': (expirationDate.invalid && (expirationDate.dirty || expirationDate.touched))}"
-            id="expirationDateupdate" name="expirationDateupdate" #expirationDate="ngModel"
-            [ngModel]="selectedBillingAddress.expirationDate | date: 'MM/dd/yyyy'"
-            (ngModelChange)="selectedBillingAddress.expirationDate = $event"
-            placeholder="mm/dd/yyyy"
-            #dp8="ngbDatepicker" ngbDatepicker />
-        <i class="cal-icon far fa-calendar" (click)="dp8.toggle()"></i>
-    </div>
-    <div style="color:red" *ngIf="expirationDate.invalid && selectedBillingAddress.expirationDate && (expirationDate.dirty || expirationDate.touched)">
-        Invalid date.
-    </div>
-</div>
+<div class="form-group col-12" style="display:inline-flex">
+        <label for="locationExpirationDate">Expiration Date<span class="required-star"> *</span></label>
+        <input style="max-width:50% !important; margin-left: 3% !important" type="date" class="form-control form-control-custom"
+          id="locationExpirationDate" name="locationExpirationDate" [(ngModel)]="sLocationExpirationDate" required />
+        <div style="display:inline-flex; margin-top:1% !important; margin-right:25% !important"
+          class="error-tooltip error-tooltip-offset" *ngIf="!sLocationExpirationDate && isTerminateBtnClicked">
+          Expiration Date is Required to terminate {{isBillingNotProvider ? 'billing' : 'practice'}} location
+        </div>
+      </div>
