@@ -1,23 +1,11 @@
-this.addService
-  .fnRaiseGenericAlert('saveProfileInformation', err)
-  .result.then((closeResult) => {
-    const nUPDId = this.addService.fnIsUPDInsertSuccess(err);
+ // Check if provider ID is 0 and error status is 500
+  if (this.providerForm.providerId === 0 && err?.status === 500) {
+    const errorMessage = err?.error?.errors?.join(' ') || 'An unexpected error occurred.';
     
-    if (nUPDId !== 0) {
-      // If UPD insert success returns a valid provider ID, update it and proceed
-      this.providerForm.providerId = nUPDId;
-      this.updateProviderIdEvent.next(this.providerForm);
-
-      this.navigationEvent.next({
-        enumCurrentScreen: ScreenType.PROFILE,
-        bIsNext: true,
-      });
-    } else {
-      // If provider creation failed in UPD and still 0, prevent navigation
-      this.addService.fnRaiseGenericAlert(
-        'Provider Creation failed in UPD.',
-        err
-      );
-      return;  // Stop execution and prevent moving to the next screen
-    }
-  });
+    // Show the exact backend error message
+    this.addService.fnRaiseGenericAlert(
+      'Error',
+      errorMessage
+    );
+    return; // Prevent navigation
+  }
