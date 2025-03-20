@@ -1,13 +1,11 @@
- public fnIsUPDInsertSuccess(errorObj: any): number {
-    let nUPDId: number = 0;
-    for(let i=0;i <errorObj?.error?.errors?.length; i++) {
-      if(errorObj?.error?.errors[i].includes("UPD: Insert Provider Information isSuccess")) {
-        const splitResult = errorObj?.error?.errors[i].split('|');
-        if(splitResult.length > 1) {
-          nUPDId = splitResult[1];
-          break;
-        }
-      }
-    }
-    return nUPDId;
+if(this.oCurrentProviderLocationInfo.expirationDate && this.hasSingleBillingInfo(this.oCurrentProviderLocationInfo.serviceLocationId)){
+      this.addService.fnRaiseWarningDlg("Not allowed","Provider must have at least one active billing location. If you are attempting to terminate this billing location, please add a new active billing location for this site prior to this action.");
+      return;
+     }
+
+ public hasSingleBillingInfo(serviceLocationId){
+    const serviceLocation = this.oProviderLocation.providerLocationInfo.filter(svc => svc.serviceLocationId === serviceLocationId)
+    
+    
+    return serviceLocation[0].providerLocBillingInfo.length ===1
   }
