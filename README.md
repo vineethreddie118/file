@@ -1,3 +1,5 @@
-isTaxonomyCodeSelected(taxonomyList: ProviderTaxonomy[], code: string, currentIndex: number): boolean {
-  return taxonomyList.some((t, idx) => t.taxonomyCode === code && idx !== currentIndex);
-}
+addNpiRow() {
+    const providerNpi = new ProviderNpi();
+    providerNpi.providerTaxonomy = [];
+    this.providerAlternateIDSection[0].providerNpi.push(providerNpi);
+  }
