@@ -1,15 +1,314 @@
-  public fnHandleNpiUpdatedEvent(data: NpiTaxonomyData) {
-    // console.log(data);
-    this.isNpiTaxonomyValid = data.bIsValid;
-    if(this.providerForm.providerAlternateIDSection[0] !=undefined){
-    this.providerForm.providerAlternateIDSection[0].providerNpi = [...data.providerAlternateIDSection[0].providerNpi];
+getTaxonamtByCode(taxonamy) {
+    const filteredTaxonamy = this.providerLookupDetails.taxonomyCodes.filter(
+      (taxonamyObj) => taxonamyObj.taxonomyCode === taxonamy.taxonomyCode
+    );
+    return filteredTaxonamy[0].id;
   }
-}
 
-  public fnHandleNpiUpdatedEvent(data: NpiTaxonomyData) {
-    // console.log(data);
-    this.isNpiTaxonomyValid = data.bIsValid;
-    if(data){
-    this.providerForm.providerAlternateIDSection = data.providerAlternateIDSection;
+
+public fnNextBtnClick(): void {
+    this.formsubmitted = true;
+
+    if (!this.profileForm.valid) {
+      return;
+    }
+
+    if (false === this.fnIsAddressValid()) {
+      this.addService.fnRaiseWarningDlg(
+        'Invalid',
+        ' Please enter valid address'
+      );
+      return;
+    }
+    if (!this.providerForm.phone && this.providerForm.phoneExt) {
+      this.addService.fnRaiseWarningDlg(
+        'Missing Phone',
+        'Please enter the phone number.'
+      );
+      return;
+    }
+
+    if (!this.isNpiTaxonomyValid) {
+      this.addService.fnRaiseWarningDlg(
+        'Invalid NPI/Taxonomy',
+        'Please enter valid NPI/Taxonomy.'
+      );
+      return;
+    }
+
+    // if (this.providerForm.providerTypeId !== ProviderTypeEnum.GROUP) {
+    //   let effectiveDate = this.providerForm.providerAlternateIDSection[0].providerNpi[0].effectiveDate;
+    //   let expirationDate = this.providerForm.providerAlternateIDSection[0].providerNpi[0].expirationDate;
+
+    //   // Convert dates if they are in string format
+    //   if (typeof effectiveDate === 'string') {
+    //     effectiveDate = new Date(effectiveDate);
+    //   }
+    //   if (typeof expirationDate === 'string') {
+    //     expirationDate = new Date(expirationDate);
+    //   }
+
+
+    //   if (!effectiveDate && expirationDate) {
+    //     this.addService.fnRaiseWarningDlg(
+    //       'Missing Effective Date',
+    //       'Please enter the effective date.'
+    //     );
+    //     return;
+    //   }
+
+
+    //   if (effectiveDate && expirationDate && effectiveDate > expirationDate) {
+    //     this.addService.fnRaiseWarningDlg(
+    //       'Invalid Date',
+    //       'Effective Date cannot be later than Expiration Date.'
+    //     );
+    //     return;
+    //   }
+    // }
+
+    this.bIsLoading = true;
+
+    if (this.providerForm.phone) {
+      this.providerForm.phone = this.providerForm.phone.replace(/\D/g, '');
+    }
+    if (this.providerForm.fax) {
+      this.providerForm.fax = this.providerForm.fax.replace(/\D/g, '');
+    }
+
+    const id = !!this.nProviderId ? this.nProviderId : 0;
+    if (!this.alternateIdActive) {
+      this.alternateIdActive = 'ACTIVE';
+    }
+
+    const requestTaxnomy = [];
+    if (
+      // this.providerForm.providerTypeId === ProviderTypeEnum.GROUP ||
+      !this.providerForm.providerAlternateIDSection[0].providerNpi[0].npi
+    ) {
+      this.providerForm.providerAlternateIDSection = null;
+    } else {
+      this.providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy =
+        this.providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy.filter(
+          (taxObj) => taxObj.taxonomyCode
+        );
+      for (const taxonomy of this.providerForm.providerAlternateIDSection[0]
+        .providerNpi[0].providerTaxonomy) {
+        const requestTaxonomy = {
+          id: this.getTaxonamtByCode(taxonomy),
+          taxonomyCode: taxonomy?.taxonomyCode,
+          isPrimary: taxonomy.isPrimary ? true : false,
+          active: taxonomy?.active === true ? true : false,
+          isDelete: false,
+          effectiveDate: taxonomy.effectiveDate,
+          expirationDate: taxonomy.expirationDate,
+          providerNPIID: taxonomy.providerNPIID
+        };
+        requestTaxnomy.push(requestTaxonomy);
+      }
+      this.providerForm.providerAlternateIDSection[0].providerNpi[0].providerTaxonomy =
+        requestTaxnomy;
+    }
+
+    this.providerForm['secondaryLicenseCodeID'] =
+      this.providerForm['secondaryLicenseCodeID'] || null;
+    this.providerForm['secondaryLicenseCodeDescription'] =
+      this.providerForm['secondaryLicenseCodeDescription'] || null;
+    this.providerForm['raceId'] = this.providerForm['raceId'] || null;
+    this.providerForm['raceName'] =
+      this.getRaceNameById(this.providerForm['raceId']) || null;
+    this.providerForm['ethnicityId'] = this.providerForm['ethnicityId'] || null;
+    this.providerForm['ethnicityName'] =
+      this.getethinicityNameById(this.providerForm['ethnicityId']) || null;
+    this.providerForm['providerContactTypeID'] =
+      this.providerForm['providerContactTypeID'] || null;
+    this.providerForm['email'] = this.providerForm['email'] || null;
+    this.providerForm['caqhid'] = this.providerForm['caqhid'] || null;
+    // this.providerForm["providerContactName"] = this.getcontactNameById(this.providerForm["providerContactTypeID"]) || null;
+    this.providerForm['savetoFlexcare'] = true;
+    this.providerForm['addressValidated'] = this.fnIsAddressValid();
+    this.providerForm['userId'] = this.oSearchformSvc?.userDetail?.userID || 2;
+    this.fnCorrectDateFields();
+    const save = () => {
+      this.addService.saveProfileInformation(id, this.providerForm).subscribe(
+        (res: any) => {
+          if (!this.nProviderId) {
+            this.providerForm.providerId = res.newProviderId;
+            this.updateProviderIdEvent.next(this.providerForm);
+          }
+          // this.hasChanges = false;
+          this.bIsLoading = false;
+          this.navigationEvent.next({
+            enumCurrentScreen: ScreenType.PROFILE,
+            bIsNext: true,
+          });
+          this.providerForm.providerAlternateIDSection = [];
+          this.providerTaxonamy = {
+            id: 0,
+            taxonomyCode: '',
+            isPrimary: false,
+            active: true,
+            isDelete: false,
+            providerNPIID: this.providerNpi.providerNPIID
+          };
+          this.providerNpi.providerTaxonomy = [this.providerTaxonamy];
+
+          this.providerForm.providerAlternateIDSection.push({
+            providerNpi: [this.providerNpi],
+            medicaidId: null,
+            medicare: this.medicare,
+          });
+        },
+        (err) => {
+          //this.addTaxonomyRow();
+
+          if (!this.nProviderId) {
+            // this.providerForm.providerAlternateIDSection = [];
+            // this.providerNpi.providerTaxonomy = [this.providerTaxonamy];
+            // this.providerForm.providerAlternateIDSection.push({
+            //   providerNpi: [this.providerNpi],
+            //   medicaidId: null,
+            //   medicare: this.medicare,
+            // });
+          }
+          if (!this.providerForm.providerAlternateIDSection) {
+            this.providerForm.providerAlternateIDSection = [];
+
+            this.providerForm.providerAlternateIDSection.push({
+              providerNpi: [this.providerNpi],
+              medicaidId: null,
+              medicare: this.medicare,
+            });
+          }
+
+          this.bIsLoading = false;
+          this.addService
+            .fnRaiseGenericAlert('saveProfileInformation', err)
+            .result.then((closeResult) => {
+              const nUPDId = this.addService.fnIsUPDInsertSuccess(err);
+              if (0 != nUPDId) {
+                this.providerForm.providerId = nUPDId;
+
+                this.updateProviderIdEvent.next(this.providerForm);
+              }
+              if (!this.providerForm.providerId) {
+                this.addService.fnRaiseGenericAlert(
+                  'Provider Creation failed in UPD.',
+                  err
+                );
+                return;
+              }
+              this.navigationEvent.next({
+                enumCurrentScreen: ScreenType.PROFILE,
+                bIsNext: true,
+              });
+            });
+        }
+      );
+    };
+    if (!this.providerForm.casid || !this.providerForm.flexcareID) {
+      this.providerForm.hasModifiedProfileInfo = true;
+      this.providerForm.hasModifiedProviderNpi = true;
+      this.providerForm.hasModifiedProviderTaxonomy = true;
+
+      save();
+    } else if (this.bIsDirty || this.fnIsDirty()) {
+      save();
+    } else {
+      // this.updateProviderIdEvent.next(this.providerForm);
+      this.navigationEvent.next({
+        enumCurrentScreen: ScreenType.PROFILE,
+        bIsNext: true,
+      });
+    }
   }
+
+{
+    "providerAlternateIDSection": [
+        {
+            "providerNpi": [
+                {
+                    "serviceLocationId": 0,
+                    "providerNPIID": 0,
+                    "providerTaxonomy": [
+                        {
+                            "id": 9,
+                            "taxonomyCode": "100000000X",
+                            "isPrimary": true,
+                            "active": false,
+                            "isDelete": false,
+                            "effectiveDate": "04/03/2025",
+                            "expirationDate": "04/23/2025",
+                            "providerNPIID": 0
+                        },
+                        {
+                            "id": 675,
+                            "taxonomyCode": "101200000X",
+                            "isPrimary": false,
+                            "active": false,
+                            "isDelete": false,
+                            "effectiveDate": "04/04/2025",
+                            "expirationDate": "04/22/2025",
+                            "providerNPIID": 0
+                        }
+                    ],
+                    "npi": "6756767676",
+                    "effectiveDate": "04/01/2025",
+                    "expirationDate": "04/30/2025"
+                },
+                {
+                    "serviceLocationId": 0,
+                    "providerNPIID": 0,
+                    "providerTaxonomy": [
+                        {
+                            "providerNPIID": 0,
+                            "taxonomyCode": "101200000X",
+                            "effectiveDate": "04/04/2025",
+                            "expirationDate": "04/23/2025",
+                            "isPrimary": true
+                        },
+                        {
+                            "providerNPIID": 0,
+                            "taxonomyCode": "101YS0200X",
+                            "effectiveDate": "04/18/2025",
+                            "expirationDate": "04/23/2025",
+                            "isPrimary": false
+                        }
+                    ],
+                    "npi": "4545345345",
+                    "effectiveDate": "04/02/2025",
+                    "expirationDate": "04/30/2025"
+                }
+            ],
+            "medicaidId": null,
+            "medicare": null
+        }
+    ],
+    "groupPractitioners": [],
+    "groupAffiliation": [],
+    "hasModifiedProfileInfo": true,
+    "hasModifiedProviderNpi": true,
+    "hasModifiedProviderTaxonomy": true,
+    "providerTypeId": 2,
+    "providerStatusId": "1",
+    "organizationName": "hgfgh",
+    "address1": "87 1/2 5th St",
+    "address2": "",
+    "city": "Norwich",
+    "stateCode": "CT",
+    "zip": "06360-3961",
+    "county": "Southeastern Ct",
+    "taxId": "675675767",
+    "secondaryLicenseCodeID": null,
+    "secondaryLicenseCodeDescription": null,
+    "raceId": null,
+    "raceName": null,
+    "ethnicityId": null,
+    "ethnicityName": null,
+    "providerContactTypeID": null,
+    "email": null,
+    "caqhid": null,
+    "savetoFlexcare": true,
+    "addressValidated": true,
+    "userId": 2
 }
