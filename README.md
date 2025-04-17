@@ -4,3 +4,6 @@ this.providerForm.providerAlternateIDSection.forEach((altIdSection) => {
       if (taxonomy.taxonomyCode) {
         taxonomy['isDisabled'] = true;
       }
+    });
+  });
+});
